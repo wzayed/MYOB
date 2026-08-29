@@ -1,0 +1,4 @@
+@page
+@model IndexModel
+@{ViewData["Title"]="الرئيسية";}
+<section class="hero card border-0 shadow-sm"><div class="card-body p-5"><p class="text-primary fw-bold mb-2">منصة عربية متكاملة</p><h1 class="display-5 fw-bold">إدارة أعمالك بوضوح وتحكّم</h1><p class="lead text-muted mt-3">بيانات رئيسية، عمليات، تقارير وصلاحيات دقيقة ضمن تجربة عربية من اليمين إلى اليسار.</p>@if(User.Identity?.IsAuthenticated!=true){<a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg mt-3">تسجيل الدخول</a>}else{<div class="row g-3 mt-4"><div class="col-md-4"><div class="metric"><span>الإعدادات</span><strong>بيانات موحّدة</strong></div></div><div class="col-md-4"><div class="metric"><span>العمليات</span><strong>مسارات منضبطة</strong></div></div><div class="col-md-4"><div class="metric"><span>التقارير</span><strong>قرارات موثوقة</strong></div></div></div>}</div></section>

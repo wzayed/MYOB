@@ -1,0 +1,4 @@
+@page
+@model MYOB.Pages.Operations.SupplierPayments.CreateModel
+@{ViewData["Title"]="إضافة حركة دفع";}<h1>إضافة دفع إلى مورد</h1><form method="get" class="card card-body mb-3"><label class="form-label">المورد</label><select asp-for="SupplierId" asp-items="Model.Suppliers" class="form-select" onchange="this.form.submit()"><option value="">اختر المورد</option></select></form>@if(Model.SupplierId.HasValue){ViewData["Methods"]=Model.Methods;ViewData["Policies"]=Model.Policies;<partial name="_Form" model="Model.Item"/>}
+@section Scripts{<partial name="_FormScripts"/>}

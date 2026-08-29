@@ -1,0 +1,4 @@
+@page
+@model MYOB.Pages.Operations.CustomerDeliveries.CreateModel
+@{ViewData["Title"]="إضافة حركة توريد";ViewData["Customers"]=Model.Customers;ViewData["Policies"]=Model.Policies;}<h1>إضافة توريد بضاعة لعميل</h1><partial name="_Form" model="Model.Item"/>
+@section Scripts{<partial name="_FormScripts"/>}

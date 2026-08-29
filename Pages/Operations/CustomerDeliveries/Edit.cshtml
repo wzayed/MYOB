@@ -1,0 +1,4 @@
+@page "{id:guid}"
+@model MYOB.Pages.Operations.CustomerDeliveries.EditModel
+@{ViewData["Title"]="تعديل حركة توريد";ViewData["Customers"]=Model.Customers;ViewData["Policies"]=Model.Policies;}<h1>تعديل توريد بضاعة لعميل</h1><partial name="_Form" model="Model.Item"/>
+@section Scripts{<partial name="_FormScripts"/>}

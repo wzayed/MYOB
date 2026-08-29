@@ -1,0 +1,4 @@
+@page "{id:guid}"
+@model MYOB.Pages.Settings.Materials.EditModel
+@{ViewData["Title"]="تعديل خامة";ViewData["Units"]=Model.Units;}<h1>تعديل خامة</h1><partial name="_Form" model="Model.Item" />
+@section Scripts{<partial name="_ValidationScriptsPartial"/>}

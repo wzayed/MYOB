@@ -1,0 +1,4 @@
+@page
+@model MYOB.Pages.Operations.SupplierReceipts.CreateModel
+@{ViewData["Title"]="إضافة حركة استلام";ViewData["Suppliers"]=Model.Suppliers;ViewData["Materials"]=Model.Materials;}<h1>إضافة حركة استلام من مورد</h1><partial name="_Form" model="Model.Item"/>
+@section Scripts{<partial name="_FormScripts"/>}

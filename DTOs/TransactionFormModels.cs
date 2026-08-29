@@ -1,0 +1,18 @@
+using System.ComponentModel.DataAnnotations;
+namespace MYOB.DTOs;
+public sealed class SupplierReceiptForm
+{
+ public Guid Id{get;set;}[Required(ErrorMessage="اختر المورد")]public Guid SupplierId{get;set;}[Required(ErrorMessage="اختر الخامة")]public Guid MaterialId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Required(ErrorMessage="رقم البوليصة مطلوب")]public string PolicyNumber{get;set;}="";[Range(typeof(decimal),"0.0001","999999999")]public decimal Quantity{get;set;}[Range(typeof(decimal),"0","999999999")]public decimal UnitPrice{get;set;}[Range(typeof(decimal),"0","100")]public decimal TaxPercent{get;set;}public string? Details{get;set;}
+}
+public sealed class SupplierPaymentForm
+{
+ public Guid Id{get;set;}[Required]public Guid SupplierId{get;set;}[Required]public Guid SupplierReceiptId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0.01","999999999")]public decimal Amount{get;set;}[Required]public Guid PaymentMethodId{get;set;}public string? Comments{get;set;}
+}
+public sealed class CustomerDeliveryForm
+{
+ public Guid Id{get;set;}[Required]public Guid CustomerId{get;set;}[Required]public Guid SupplierReceiptId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0","999999999")]public decimal UnitPrice{get;set;}[Range(typeof(decimal),"0","100")]public decimal TaxPercent{get;set;}public string? Details{get;set;}
+}
+public sealed class CustomerPaymentForm
+{
+ public Guid Id{get;set;}[Required]public Guid CustomerId{get;set;}[Required]public Guid CustomerDeliveryId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0.01","999999999")]public decimal Amount{get;set;}[Required]public Guid PaymentMethodId{get;set;}public string? Comments{get;set;}
+}

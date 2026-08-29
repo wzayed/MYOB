@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+.dotnet-cli/
+DataProtectionKeys/
+DatabaseBackups/
+*.user
+*.suo

@@ -1,0 +1,4 @@
+@page "{id:guid}"
+@model MYOB.Pages.Operations.SupplierPayments.EditModel
+@{ViewData["Title"]="تعديل حركة دفع";ViewData["Methods"]=Model.Methods;ViewData["Policies"]=Model.Policies;}<h1>تعديل دفع إلى مورد</h1><div class="alert alert-info">المورد: @Model.SupplierName</div><partial name="_Form" model="Model.Item"/>
+@section Scripts{<partial name="_FormScripts"/>}

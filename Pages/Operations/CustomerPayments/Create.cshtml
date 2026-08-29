@@ -1,0 +1,4 @@
+@page
+@model MYOB.Pages.Operations.CustomerPayments.CreateModel
+@{ViewData["Title"]="إضافة حركة قبض";}<h1>إضافة قبض من عميل</h1><form method="get" class="card card-body mb-3"><label class="form-label">العميل</label><select asp-for="CustomerId" asp-items="Model.Customers" class="form-select" onchange="this.form.submit()"><option value="">اختر العميل</option></select></form>@if(Model.CustomerId.HasValue){ViewData["Methods"]=Model.Methods;ViewData["Policies"]=Model.Policies;<partial name="_Form" model="Model.Item"/>}
+@section Scripts{<partial name="_FormScripts"/>}

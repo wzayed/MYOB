@@ -1,0 +1,1 @@
+<script>const update=()=>{const o=policy.selectedOptions[0];material.value=o?.dataset.material||'';qty.value=o?.dataset.qty||'';unit.value=o?.dataset.unit||'';total.value=((parseFloat(qty.value)||0)*(parseFloat(price.value)||0)*(1+(parseFloat(tax.value)||0)/100)).toFixed(2)};[policy,price,tax].forEach(x=>x.addEventListener('input',update));update()</script>

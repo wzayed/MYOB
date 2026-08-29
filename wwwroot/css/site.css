@@ -1,0 +1,31 @@
+html {
+  font-size: 14px;
+}
+
+body { background: #f6f8fb; font-family: Tahoma, Arial, sans-serif; }
+.navbar { background: linear-gradient(110deg,#123c69,#1d6fa5) !important; }
+.hero { background: linear-gradient(135deg,#fff 55%,#e8f2fa); }
+.metric { background:#fff; border:1px solid #e2e8f0; border-radius:1rem; padding:1.25rem; }
+.metric span { display:block; color:#64748b; margin-bottom:.35rem; }
+.metric strong { color:#123c69; }
+.table thead th { white-space:nowrap; background:#edf3f8; }
+.form-control,.form-select,.btn { border-radius:.6rem; }
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
