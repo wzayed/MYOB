@@ -10,6 +10,12 @@ body { background: #f6f8fb; font-family: Tahoma, Arial, sans-serif; }
 .metric strong { color:#123c69; }
 .table thead th { white-space:nowrap; background:#edf3f8; }
 .form-control,.form-select,.btn { border-radius:.6rem; }
+.searchable-combobox { position:relative; }
+.searchable-combobox-input { padding-left:2.5rem; background-image:linear-gradient(45deg,transparent 50%,#64748b 50%),linear-gradient(135deg,#64748b 50%,transparent 50%);background-position:1.1rem 50%,.8rem 50%;background-size:.35rem .35rem,.35rem .35rem;background-repeat:no-repeat; }
+.searchable-combobox-menu { position:absolute;z-index:1050;top:calc(100% + .25rem);right:0;left:0;max-height:16rem;overflow:auto;background:#fff;border:1px solid #cbd5e1;border-radius:.6rem;box-shadow:0 .75rem 1.5rem rgba(15,23,42,.12);padding:.35rem; }
+.searchable-combobox-option { display:block;width:100%;border:0;background:transparent;text-align:right;padding:.65rem .75rem;border-radius:.4rem; }
+.searchable-combobox-option:hover,.searchable-combobox-option:focus { background:#e8f2fa;outline:0; }
+.searchable-combobox-empty { color:#64748b;padding:.75rem;text-align:center; }
 
 @media (min-width: 768px) {
   html {

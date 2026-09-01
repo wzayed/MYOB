@@ -1,1 +1,1 @@
-<script>const show=()=>remaining.value=policy.selectedOptions[0]?.dataset.remaining||'';policy?.addEventListener('change',show);show()</script>
+<script>(()=>{const policy=document.getElementById('policy'),remaining=document.getElementById('remaining');if(!policy||!remaining)return;const show=()=>remaining.value=policy.selectedOptions[0]?.dataset.remaining||'';policy.addEventListener('change',show);show()})();</script>
