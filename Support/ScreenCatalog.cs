@@ -13,6 +13,9 @@ public static class ScreenCatalog
     public const string CustomerPayments = "operations.customer-payments";
     public const string Users = "settings.users";
     public const string AuditTrail = "reports.audit-trail";
+    public const string SupplierStatement = "reports.supplier-statement";
+    public const string CustomerStatement = "reports.customer-statement";
+    public const string ProfitLoss = "reports.profit-loss";
     public static readonly IReadOnlyList<ScreenDefinition> All =
     [
         new(Suppliers, "الموردون", "الإعدادات", "/Settings/Suppliers"),
@@ -25,7 +28,10 @@ public static class ScreenCatalog
         new(CustomerDeliveries, "توريد بضاعة لعميل", "العمليات", "/Operations/CustomerDeliveries"),
         new(CustomerPayments, "قبض من عميل", "العمليات", "/Operations/CustomerPayments"),
         new(Users, "المستخدمون والصلاحيات", "الإعدادات", "/Settings/Users"),
-        new(AuditTrail, "سجل المراجعة", "التقارير", "/Reports/AuditTrail")
+        new(AuditTrail, "سجل المراجعة", "التقارير", "/Reports/AuditTrail"),
+        new(SupplierStatement, "كشف حساب مورد", "التقارير", "/Reports/SupplierStatement"),
+        new(CustomerStatement, "كشف حساب عميل", "التقارير", "/Reports/CustomerStatement"),
+        new(ProfitLoss, "الأرباح والخسائر", "التقارير", "/Reports/ProfitLoss")
     ];
     public static ScreenDefinition? FromPath(string path) => All.OrderByDescending(x => x.Path.Length)
         .FirstOrDefault(x => path.StartsWith(x.Path, StringComparison.OrdinalIgnoreCase));

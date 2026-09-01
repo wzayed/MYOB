@@ -1,0 +1,2 @@
+@model IReadOnlyList<MYOB.DTOs.ProfitLossRow>
+<div class="table-responsive"><table class="table table-bordered table-striped"><thead><tr><th>المورد</th><th>العميل</th><th>رقم البوليصة</th><th>القيمة</th></tr></thead><tbody>@if(Model.Count==0){<tr><td colspan="4" class="text-center py-4">لا توجد بيانات مطابقة</td></tr>}@foreach(var row in Model){<tr><td>@row.SupplierName</td><td>@row.CustomerName</td><td>@row.PolicyNumber</td><td class="@(row.Value<0?"text-danger":"text-success")">@row.Value.ToString("N2")</td></tr>}</tbody></table></div>

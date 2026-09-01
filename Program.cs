@@ -29,6 +29,7 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IAuditReportService, AuditReportService>();
 builder.Services.AddScoped<ITransactionService,TransactionService>();
+builder.Services.AddScoped<IFinancialReportService,FinancialReportService>();
 builder.Services.AddScoped<ScreenPermissionPageFilter>();
 builder.Services.AddRazorPages(options => options.Conventions.ConfigureFilter(
     new Microsoft.AspNetCore.Mvc.ServiceFilterAttribute(typeof(ScreenPermissionPageFilter))));
