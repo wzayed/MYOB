@@ -3,4 +3,6 @@ public sealed record SupplierReceiptCommand(Guid SupplierId,Guid MaterialId,Date
 public sealed record SupplierPaymentCommand(Guid SupplierId,Guid SupplierReceiptId,DateOnly Date,decimal Amount,Guid PaymentMethodId,string? Comments);
 public sealed record CustomerDeliveryCommand(Guid CustomerId,Guid SupplierReceiptId,DateOnly Date,decimal UnitPrice,decimal TaxPercent,string? Details);
 public sealed record CustomerPaymentCommand(Guid CustomerId,Guid CustomerDeliveryId,DateOnly Date,decimal Amount,Guid PaymentMethodId,string? Comments);
+public sealed record CustomerPaymentAllocation(Guid CustomerDeliveryId,decimal Amount);
+public sealed record CustomerPaymentBatchCommand(Guid CustomerId,DateOnly Date,Guid PaymentMethodId,string? Comments,IReadOnlyList<CustomerPaymentAllocation> Allocations);
 public sealed record PolicyOption(Guid Id,string PolicyNumber,string MaterialName,string UnitName,decimal Quantity,decimal RemainingAmount,decimal PurchaseUnitPrice,decimal PurchaseTaxPercent,decimal PurchaseTotal);

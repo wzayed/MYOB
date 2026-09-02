@@ -22,10 +22,24 @@ public sealed class ProfitLossPdfDocument(ProfitLossResult report, ProfitLossFil
             {
                 Section(c, "المحقق", report.Realized, "صافي الربح/الخسارة", Colors.Green.Darken2);
                 c.Item().PaddingTop(18);
-                Section(c, "غير المحقق - تكلفة بضاعة غير موردة", report.Unrealized, "التكلفة غير المحققة", Colors.Orange.Darken2);
+                Section(c, "غير المحقق - مبالغ لم تُحصّل", report.Unrealized, "صافي الربح/الخسارة غير المحقق", Colors.Orange.Darken2);
+                c.Item().PaddingTop(18);
+                UndeliveredSection(c,report.UndeliveredGoods);
             });
             page.Footer().AlignCenter().Text(x => { x.Span("صفحة "); x.CurrentPageNumber(); x.Span(" من "); x.TotalPages(); });
         });
+    }
+    private static void UndeliveredSection(ColumnDescriptor column,IReadOnlyList<UndeliveredGoodsRow> rows)
+    {
+        column.Item().AlignRight().Text("بضاعة غير موردة للعملاء").FontSize(14).Bold().FontColor(Colors.Blue.Darken2);
+        column.Item().PaddingTop(5).Table(table =>
+        {
+            table.ColumnsDefinition(c => { c.RelativeColumn();c.RelativeColumn();c.RelativeColumn();c.RelativeColumn();c.RelativeColumn(); });
+            table.Header(h => { Header(h.Cell(),"المورد");Header(h.Cell(),"رقم البوليصة");Header(h.Cell(),"الخامة");Header(h.Cell(),"الكمية");Header(h.Cell(),"تكلفة الشراء"); });
+            if(rows.Count==0)table.Cell().ColumnSpan(5).Padding(12).AlignCenter().Text("لا توجد بضاعة غير موردة مطابقة");
+            foreach(var row in rows){Cell(table.Cell(),row.SupplierName);Cell(table.Cell(),row.PolicyNumber);Cell(table.Cell(),row.MaterialName);Cell(table.Cell(),row.Quantity.ToString("N2"));Cell(table.Cell(),row.PurchaseCost.ToString("N2"));}
+        });
+        column.Item().PaddingTop(5).AlignRight().Text($"إجمالي تكلفة البضاعة غير الموردة: {rows.Sum(x=>x.PurchaseCost):N2}").Bold();
     }
     private static void Section(ColumnDescriptor column, string title, IReadOnlyList<ProfitLossRow> rows, string totalLabel, string color)
     {

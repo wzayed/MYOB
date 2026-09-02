@@ -44,5 +44,5 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapRazorPages();
-if (app.Environment.IsDevelopment()) await DbInitializer.InitializeAsync(app.Services);
+await DbInitializer.InitializeAsync(app.Services, app.Environment.IsDevelopment());
 app.Run();

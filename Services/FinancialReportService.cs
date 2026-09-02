@@ -49,21 +49,37 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
 
     public async Task<ProfitLossResult> GetProfitLossAsync(ProfitLossFilter filter)
     {
-        if (!Valid(filter.FromDate, filter.ToDate)) return new([], []);
+        if (!Valid(filter.FromDate, filter.ToDate)) return new([], [], []);
         var from = filter.FromDate!.Value;
         var to = filter.ToDate!.Value;
-        var query = db.SupplierReceipts.AsNoTracking().Where(x => x.Date <= to);
-        if (filter.SupplierId.HasValue) query = query.Where(x => x.SupplierId == filter.SupplierId.Value);
-        if (filter.CustomerId.HasValue) query = query.Where(x => x.CustomerDelivery != null && x.CustomerDelivery.CustomerId == filter.CustomerId.Value);
-        var rows = await query.Where(x => (x.CustomerDelivery != null && x.CustomerDelivery.Date >= from && x.CustomerDelivery.Date <= to) || (x.CustomerDelivery == null && x.Date >= from))
-            .OrderBy(x => x.Date)
-            .Select(x => new ProfitLossRow(
-                x.Supplier.Name,
-                x.CustomerDelivery == null ? "غير مخصص" : x.CustomerDelivery.Customer.Name,
-                x.PolicyNumber,
-                x.CustomerDelivery == null ? -(x.Quantity * x.UnitPrice) : x.Quantity * (x.CustomerDelivery.UnitPrice - x.UnitPrice),
-                x.CustomerDelivery != null)).ToListAsync();
-        return new(rows.Where(x => x.IsRealized).ToList(), rows.Where(x => !x.IsRealized).ToList());
+        var query = db.CustomerDeliveries.AsNoTracking().Where(x => x.Date <= to);
+        if (filter.SupplierId.HasValue) query = query.Where(x => x.SupplierReceipt.SupplierId == filter.SupplierId.Value);
+        if (filter.CustomerId.HasValue) query = query.Where(x => x.CustomerId == filter.CustomerId.Value);
+        var policies = await query.OrderBy(x => x.Date).Select(x => new
+        {
+            SupplierName=x.SupplierReceipt.Supplier.Name,CustomerName=x.Customer.Name,x.SupplierReceipt.PolicyNumber,
+            GrossProfit=x.SupplierReceipt.Quantity*(x.UnitPrice-x.SupplierReceipt.UnitPrice),SaleTotal=x.Total,
+            CollectedInPeriod=x.Payments.Where(p=>p.Date>=from&&p.Date<=to).Sum(p=>(decimal?)p.Amount)??0m,
+            CollectedToDate=x.Payments.Where(p=>p.Date<=to).Sum(p=>(decimal?)p.Amount)??0m
+        }).ToListAsync();
+        var realized=new List<ProfitLossRow>();var unrealized=new List<ProfitLossRow>();
+        foreach(var policy in policies)
+        {
+            var periodRatio=policy.SaleTotal<=0?0m:Math.Clamp(policy.CollectedInPeriod/policy.SaleTotal,0m,1m);
+            var remainingRatio=policy.SaleTotal<=0?0m:Math.Clamp((policy.SaleTotal-policy.CollectedToDate)/policy.SaleTotal,0m,1m);
+            var realizedValue=decimal.Round(policy.GrossProfit*periodRatio,2,MidpointRounding.AwayFromZero);
+            var unrealizedValue=decimal.Round(policy.GrossProfit*remainingRatio,2,MidpointRounding.AwayFromZero);
+            if(policy.CollectedInPeriod>0)realized.Add(new(policy.SupplierName,policy.CustomerName,policy.PolicyNumber,realizedValue,true));
+            if(policy.CollectedToDate<policy.SaleTotal)unrealized.Add(new(policy.SupplierName,policy.CustomerName,policy.PolicyNumber,unrealizedValue,false));
+        }
+        var undelivered=new List<UndeliveredGoodsRow>();
+        if(!filter.CustomerId.HasValue)
+        {
+            var inventoryQuery=db.SupplierReceipts.AsNoTracking().Where(x=>x.Date>=from&&x.Date<=to&&x.CustomerDelivery==null);
+            if(filter.SupplierId.HasValue)inventoryQuery=inventoryQuery.Where(x=>x.SupplierId==filter.SupplierId.Value);
+            undelivered=await inventoryQuery.OrderBy(x=>x.Date).Select(x=>new UndeliveredGoodsRow(x.Supplier.Name,x.PolicyNumber,x.Material.Name,x.Quantity,x.Total)).ToListAsync();
+        }
+        return new(realized,unrealized,undelivered);
     }
 
     private static bool Valid(DateOnly? from, DateOnly? to) => from.HasValue && to.HasValue && from.Value <= to.Value;
@@ -77,7 +93,7 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
             balance += movement.Debit - movement.Credit;
             rows.Add(new(movement.Date, movement.Details, movement.Debit, movement.Credit, balance));
         }
-        return new(name, opening, rows, balance);
+        return new(name, opening, rows, rows.Sum(x=>x.Debit), rows.Sum(x=>x.Credit), balance);
     }
 
     private sealed record Movement(DateOnly Date, string Details, decimal Debit, decimal Credit, DateTimeOffset CreatedAt);

@@ -10,7 +10,7 @@ public sealed class AccountStatementFilter
 }
 
 public sealed record AccountStatementRow(DateOnly Date, string Details, decimal Debit, decimal Credit, decimal Balance);
-public sealed record AccountStatementResult(string PartyName, decimal OpeningBalance, IReadOnlyList<AccountStatementRow> Rows, decimal ClosingBalance);
+public sealed record AccountStatementResult(string PartyName, decimal OpeningBalance, IReadOnlyList<AccountStatementRow> Rows, decimal TotalDebit, decimal TotalCredit, decimal ClosingBalance);
 
 public sealed class ProfitLossFilter
 {
@@ -21,4 +21,5 @@ public sealed class ProfitLossFilter
 }
 
 public sealed record ProfitLossRow(string SupplierName, string CustomerName, string PolicyNumber, decimal Value, bool IsRealized);
-public sealed record ProfitLossResult(IReadOnlyList<ProfitLossRow> Realized, IReadOnlyList<ProfitLossRow> Unrealized);
+public sealed record UndeliveredGoodsRow(string SupplierName, string PolicyNumber, string MaterialName, decimal Quantity, decimal PurchaseCost);
+public sealed record ProfitLossResult(IReadOnlyList<ProfitLossRow> Realized, IReadOnlyList<ProfitLossRow> Unrealized, IReadOnlyList<UndeliveredGoodsRow> UndeliveredGoods);

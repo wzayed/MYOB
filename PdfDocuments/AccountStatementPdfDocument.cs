@@ -24,7 +24,7 @@ public sealed class AccountStatementPdfDocument(string title, AccountStatementRe
                 column.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c => { c.ConstantColumn(80); c.RelativeColumn(3); c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
-                    table.Header(h => { Header(h.Cell(), "التاريخ"); Header(h.Cell(), "التفاصيل"); Header(h.Cell(), "عليه"); Header(h.Cell(), "له"); Header(h.Cell(), "الرصيد"); });
+                    table.Header(h => { Header(h.Cell(), "التاريخ"); Header(h.Cell(), "التفاصيل"); Header(h.Cell(), "منه"); Header(h.Cell(), "له"); Header(h.Cell(), "الرصيد"); });
                     if (report.Rows.Count == 0) table.Cell().ColumnSpan(5).Padding(15).AlignCenter().Text("لا توجد حركات في الفترة المحددة");
                     foreach (var row in report.Rows)
                     {
@@ -32,6 +32,7 @@ public sealed class AccountStatementPdfDocument(string title, AccountStatementRe
                         Cell(table.Cell(), row.Debit == 0 ? "" : row.Debit.ToString("N2")); Cell(table.Cell(), row.Credit == 0 ? "" : row.Credit.ToString("N2")); Cell(table.Cell(), row.Balance.ToString("N2"));
                     }
                 });
+                column.Item().PaddingTop(8).AlignRight().Text($"إجمالي منه: {report.TotalDebit:N2} | إجمالي له: {report.TotalCredit:N2}").Bold();
                 column.Item().PaddingTop(8).AlignRight().Text($"الرصيد الختامي: {report.ClosingBalance:N2}").Bold();
             });
             page.Footer().AlignCenter().Text(x => { x.Span("صفحة "); x.CurrentPageNumber(); x.Span(" من "); x.TotalPages(); });

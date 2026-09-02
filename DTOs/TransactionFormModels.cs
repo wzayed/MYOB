@@ -16,3 +16,11 @@ public sealed class CustomerPaymentForm
 {
  public Guid Id{get;set;}[Required]public Guid CustomerId{get;set;}[Required]public Guid CustomerDeliveryId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0.01","999999999")]public decimal Amount{get;set;}[Required]public Guid PaymentMethodId{get;set;}public string? Comments{get;set;}
 }
+public sealed class CustomerPaymentBatchForm
+{
+ [Required]public Guid CustomerId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0.01","999999999",ErrorMessage="أدخل إجمالي المبلغ المستلم")]public decimal TotalAmount{get;set;}[Required]public Guid PaymentMethodId{get;set;}public string? Comments{get;set;}public List<CustomerPaymentAllocationForm> Allocations{get;set;}=[];
+}
+public sealed class CustomerPaymentAllocationForm
+{
+ [Required]public Guid CustomerDeliveryId{get;set;}[Range(typeof(decimal),"0","999999999")]public decimal Amount{get;set;}
+}

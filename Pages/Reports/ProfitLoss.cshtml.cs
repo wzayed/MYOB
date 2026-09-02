@@ -13,7 +13,7 @@ namespace MYOB.Pages.Reports;
 public class ProfitLossModel(IFinancialReportService reports, ApplicationDbContext db) : PageModel
 {
     [BindProperty(SupportsGet = true)] public ProfitLossFilter Filter { get; set; } = new();
-    public ProfitLossResult Report { get; private set; } = new([], []);
+    public ProfitLossResult Report { get; private set; } = new([], [], []);
     public SelectList Suppliers { get; private set; } = null!;
     public SelectList Customers { get; private set; } = null!;
     public string SupplierName { get; private set; } = "الكل";

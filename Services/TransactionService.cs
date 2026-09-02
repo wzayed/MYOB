@@ -4,7 +4,7 @@ public interface ITransactionService
 {
     decimal CalculateTotal(decimal quantity,decimal unitPrice,decimal taxPercent);
     Task CreateSupplierReceiptAsync(SupplierReceiptCommand command);Task CreateSupplierPaymentAsync(SupplierPaymentCommand command);
-    Task CreateCustomerDeliveryAsync(CustomerDeliveryCommand command);Task CreateCustomerPaymentAsync(CustomerPaymentCommand command);
+    Task CreateCustomerDeliveryAsync(CustomerDeliveryCommand command);Task CreateCustomerPaymentAsync(CustomerPaymentCommand command);Task CreateCustomerPaymentsAsync(CustomerPaymentBatchCommand command);
     Task UpdateSupplierReceiptAsync(Guid id,SupplierReceiptCommand command);Task UpdateSupplierPaymentAsync(Guid id,SupplierPaymentCommand command);
     Task UpdateCustomerDeliveryAsync(Guid id,CustomerDeliveryCommand command);Task UpdateCustomerPaymentAsync(Guid id,CustomerPaymentCommand command);
     Task<List<PolicyOption>> GetSupplierPoliciesAsync(Guid supplierId,Guid? excludePaymentId=null);Task<List<PolicyOption>> GetUnassignedPoliciesAsync(Guid? includeDeliveryId=null);Task<List<PolicyOption>> GetCustomerPoliciesAsync(Guid customerId,Guid? excludePaymentId=null);
@@ -59,9 +59,24 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
         .Select(x=>new PolicyOption(x.Id,x.SupplierReceipt.PolicyNumber,x.SupplierReceipt.Material.Name,x.SupplierReceipt.Material.UnitOfMeasure.Name,x.SupplierReceipt.Quantity,x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0),x.SupplierReceipt.UnitPrice,x.SupplierReceipt.TaxPercent,x.SupplierReceipt.Total)).ToListAsync();
     public async Task CreateCustomerPaymentAsync(CustomerPaymentCommand c)
     {
-        if(c.Amount<=0)throw new InvalidOperationException("مبلغ القبض يجب أن يكون أكبر من صفر.");if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");
-        var delivery=await db.CustomerDeliveries.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==c.CustomerDeliveryId&&x.CustomerId==c.CustomerId)??throw new InvalidOperationException("البوليصة لا تخص العميل المحدد.");var remaining=delivery.Total-delivery.Payments.Sum(x=>x.Amount);if(c.Amount>remaining)throw new InvalidOperationException($"المبلغ أكبر من المتبقي ({remaining:N2}).");
-        db.CustomerPayments.Add(new CustomerPayment{CustomerId=c.CustomerId,CustomerDeliveryId=c.CustomerDeliveryId,Date=c.Date,Amount=c.Amount,PaymentMethodId=c.PaymentMethodId,Comments=c.Comments});await db.SaveChangesAsync();
+        await CreateCustomerPaymentsAsync(new(c.CustomerId,c.Date,c.PaymentMethodId,c.Comments,[new(c.CustomerDeliveryId,c.Amount)]));
+    }
+    public async Task CreateCustomerPaymentsAsync(CustomerPaymentBatchCommand c)
+    {
+        var allocations=c.Allocations.Where(x=>x.Amount>0).ToList();
+        if(allocations.Count==0)throw new InvalidOperationException("أدخل مبلغاً لبوليصة واحدة على الأقل.");
+        if(allocations.GroupBy(x=>x.CustomerDeliveryId).Any(x=>x.Count()>1))throw new InvalidOperationException("لا يمكن تكرار البوليصة في نفس حركة القبض.");
+        if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");
+        var ids=allocations.Select(x=>x.CustomerDeliveryId).ToList();
+        var deliveries=await db.CustomerDeliveries.Include(x=>x.Payments).Include(x=>x.SupplierReceipt).Where(x=>ids.Contains(x.Id)&&x.CustomerId==c.CustomerId).ToDictionaryAsync(x=>x.Id);
+        if(deliveries.Count!=ids.Count)throw new InvalidOperationException("إحدى البوالص لا تخص العميل المحدد.");
+        foreach(var allocation in allocations)
+        {
+            var delivery=deliveries[allocation.CustomerDeliveryId];var remaining=delivery.Total-delivery.Payments.Sum(x=>x.Amount);
+            if(allocation.Amount>remaining)throw new InvalidOperationException($"المبلغ المخصص للبوليصة {delivery.SupplierReceipt.PolicyNumber} أكبر من المتبقي ({remaining:N2}).");
+            db.CustomerPayments.Add(new CustomerPayment{CustomerId=c.CustomerId,CustomerDeliveryId=allocation.CustomerDeliveryId,Date=c.Date,Amount=allocation.Amount,PaymentMethodId=c.PaymentMethodId,Comments=c.Comments});
+        }
+        await db.SaveChangesAsync();
     }
     public async Task UpdateCustomerPaymentAsync(Guid id,CustomerPaymentCommand c)
     {

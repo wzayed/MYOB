@@ -1,0 +1,1 @@
+Server=db66361.public.databaseasp.net; Database=db66361; User Id=db66361; Password=Nh9%=6HyjZ#5; Encrypt=False; MultipleActiveResultSets=True;  
