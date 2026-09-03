@@ -3,7 +3,7 @@ namespace MYOB.Services;
 public interface ITransactionService
 {
     decimal CalculateTotal(decimal quantity,decimal unitPrice,decimal taxPercent);
-    Task CreateSupplierReceiptAsync(SupplierReceiptCommand command);Task CreateSupplierPaymentAsync(SupplierPaymentCommand command);
+    Task CreateSupplierReceiptAsync(SupplierReceiptCommand command);Task CreateSupplierPaymentAsync(SupplierPaymentCommand command);Task CreateSupplierPaymentsAsync(SupplierPaymentBatchCommand command);
     Task CreateCustomerDeliveryAsync(CustomerDeliveryCommand command);Task CreateCustomerPaymentAsync(CustomerPaymentCommand command);Task CreateCustomerPaymentsAsync(CustomerPaymentBatchCommand command);
     Task UpdateSupplierReceiptAsync(Guid id,SupplierReceiptCommand command);Task UpdateSupplierPaymentAsync(Guid id,SupplierPaymentCommand command);
     Task UpdateCustomerDeliveryAsync(Guid id,CustomerDeliveryCommand command);Task UpdateCustomerPaymentAsync(Guid id,CustomerPaymentCommand command);
@@ -30,20 +30,34 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
         if(await db.SupplierReceipts.AnyAsync(r=>r.Id!=id&&r.PolicyNumber==c.PolicyNumber.Trim()))throw new InvalidOperationException("رقم البوليصة مسجل مسبقاً.");x.SupplierId=c.SupplierId;x.MaterialId=c.MaterialId;x.Date=c.Date;x.PolicyNumber=c.PolicyNumber.Trim();x.Quantity=c.Quantity;x.UnitPrice=c.UnitPrice;x.TaxPercent=c.TaxPercent;x.Total=CalculateTotal(c.Quantity,c.UnitPrice,c.TaxPercent);x.Details=c.Details;await db.SaveChangesAsync();
     }
     public async Task<List<PolicyOption>> GetSupplierPoliciesAsync(Guid supplierId,Guid? excludePaymentId=null)=>await db.SupplierReceipts.AsNoTracking().Where(x=>x.SupplierId==supplierId&&x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0)>0)
-        .OrderByDescending(x=>x.Date).Select(x=>new PolicyOption(x.Id,x.PolicyNumber,x.Material.Name,x.Material.UnitOfMeasure.Name,x.Quantity,x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0),x.UnitPrice,x.TaxPercent,x.Total)).ToListAsync();
+        .OrderBy(x=>x.Date).ThenBy(x=>x.PolicyNumber).Select(x=>new PolicyOption(x.Id,x.PolicyNumber,x.Date,x.Material.Name,x.Material.UnitOfMeasure.Name,x.Quantity,x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0),x.UnitPrice,x.TaxPercent,x.Total)).ToListAsync();
     public async Task CreateSupplierPaymentAsync(SupplierPaymentCommand c)
     {
-        if(c.Amount<=0)throw new InvalidOperationException("مبلغ الدفع يجب أن يكون أكبر من صفر.");if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");
-        var receipt=await db.SupplierReceipts.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==c.SupplierReceiptId&&x.SupplierId==c.SupplierId)??throw new InvalidOperationException("البوليصة لا تخص المورد المحدد.");
-        var remaining=receipt.Total-receipt.Payments.Sum(x=>x.Amount);if(c.Amount>remaining)throw new InvalidOperationException($"المبلغ أكبر من المتبقي ({remaining:N2}).");
-        db.SupplierPayments.Add(new SupplierPayment{SupplierId=c.SupplierId,SupplierReceiptId=c.SupplierReceiptId,Date=c.Date,Amount=c.Amount,PaymentMethodId=c.PaymentMethodId,Comments=c.Comments});await db.SaveChangesAsync();
+        await CreateSupplierPaymentsAsync(new(c.SupplierId,c.Date,c.PaymentMethodId,c.Comments,[new(c.SupplierReceiptId,c.Amount)]));
+    }
+    public async Task CreateSupplierPaymentsAsync(SupplierPaymentBatchCommand c)
+    {
+        var allocations=c.Allocations.Where(x=>x.Amount>0).ToList();
+        if(allocations.Count==0)throw new InvalidOperationException("أدخل مبلغاً لبوليصة واحدة على الأقل.");
+        if(allocations.GroupBy(x=>x.SupplierReceiptId).Any(x=>x.Count()>1))throw new InvalidOperationException("لا يمكن تكرار البوليصة في نفس حركة الدفع.");
+        if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");
+        var ids=allocations.Select(x=>x.SupplierReceiptId).ToList();
+        var receipts=await db.SupplierReceipts.Include(x=>x.Payments).Where(x=>ids.Contains(x.Id)&&x.SupplierId==c.SupplierId).ToDictionaryAsync(x=>x.Id);
+        if(receipts.Count!=ids.Count)throw new InvalidOperationException("إحدى البوالص لا تخص المورد المحدد.");
+        foreach(var allocation in allocations)
+        {
+            var receipt=receipts[allocation.SupplierReceiptId];var remaining=receipt.Total-receipt.Payments.Sum(x=>x.Amount);
+            if(allocation.Amount>remaining)throw new InvalidOperationException($"المبلغ المخصص للبوليصة {receipt.PolicyNumber} أكبر من المتبقي ({remaining:N2}).");
+            db.SupplierPayments.Add(new SupplierPayment{SupplierId=c.SupplierId,SupplierReceiptId=allocation.SupplierReceiptId,Date=c.Date,Amount=allocation.Amount,PaymentMethodId=c.PaymentMethodId,Comments=c.Comments});
+        }
+        await db.SaveChangesAsync();
     }
     public async Task UpdateSupplierPaymentAsync(Guid id,SupplierPaymentCommand c)
     {
         if(c.Amount<=0)throw new InvalidOperationException("مبلغ الدفع يجب أن يكون أكبر من صفر.");if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");var payment=await db.SupplierPayments.SingleOrDefaultAsync(x=>x.Id==id)??throw new InvalidOperationException("حركة الدفع غير موجودة.");var receipt=await db.SupplierReceipts.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==c.SupplierReceiptId&&x.SupplierId==c.SupplierId)??throw new InvalidOperationException("البوليصة لا تخص المورد المحدد.");var remaining=receipt.Total-receipt.Payments.Where(x=>x.Id!=id).Sum(x=>x.Amount);if(c.Amount>remaining)throw new InvalidOperationException($"المبلغ أكبر من المتبقي ({remaining:N2}).");payment.SupplierId=c.SupplierId;payment.SupplierReceiptId=c.SupplierReceiptId;payment.Date=c.Date;payment.Amount=c.Amount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=c.Comments;await db.SaveChangesAsync();
     }
     public async Task<List<PolicyOption>> GetUnassignedPoliciesAsync(Guid? includeDeliveryId=null)=>await db.SupplierReceipts.AsNoTracking().Where(x=>x.CustomerDelivery==null||(includeDeliveryId.HasValue&&x.CustomerDelivery!.Id==includeDeliveryId.Value)).OrderByDescending(x=>x.Date)
-        .Select(x=>new PolicyOption(x.Id,x.PolicyNumber,x.Material.Name,x.Material.UnitOfMeasure.Name,x.Quantity,0,x.UnitPrice,x.TaxPercent,x.Total)).ToListAsync();
+        .Select(x=>new PolicyOption(x.Id,x.PolicyNumber,x.Date,x.Material.Name,x.Material.UnitOfMeasure.Name,x.Quantity,0,x.UnitPrice,x.TaxPercent,x.Total)).ToListAsync();
     public async Task CreateCustomerDeliveryAsync(CustomerDeliveryCommand c)
     {
         if(!await db.Customers.AnyAsync(x=>x.Id==c.CustomerId))throw new InvalidOperationException("العميل غير صالح.");var receipt=await db.SupplierReceipts.Include(x=>x.Material).SingleOrDefaultAsync(x=>x.Id==c.SupplierReceiptId)??throw new InvalidOperationException("البوليصة غير موجودة.");
@@ -55,8 +69,8 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
         if(!await db.Customers.AnyAsync(x=>x.Id==c.CustomerId))throw new InvalidOperationException("العميل غير صالح.");
         var x=await db.CustomerDeliveries.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==id)??throw new InvalidOperationException("حركة التوريد غير موجودة.");if(x.Payments.Count>0)throw new InvalidOperationException("لا يمكن تعديل توريد مرتبط بقبض من العميل.");if(await db.CustomerDeliveries.AnyAsync(d=>d.Id!=id&&d.SupplierReceiptId==c.SupplierReceiptId))throw new InvalidOperationException("تم تخصيص هذه البوليصة لعميل من قبل.");var receipt=await db.SupplierReceipts.SingleOrDefaultAsync(r=>r.Id==c.SupplierReceiptId)??throw new InvalidOperationException("البوليصة غير موجودة.");x.CustomerId=c.CustomerId;x.SupplierReceiptId=c.SupplierReceiptId;x.Date=c.Date;x.UnitPrice=c.UnitPrice;x.TaxPercent=c.TaxPercent;x.Total=CalculateTotal(receipt.Quantity,c.UnitPrice,c.TaxPercent);x.Details=c.Details;await db.SaveChangesAsync();
     }
-    public async Task<List<PolicyOption>> GetCustomerPoliciesAsync(Guid customerId,Guid? excludePaymentId=null)=>await db.CustomerDeliveries.AsNoTracking().Where(x=>x.CustomerId==customerId&&x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0)>0).OrderByDescending(x=>x.Date)
-        .Select(x=>new PolicyOption(x.Id,x.SupplierReceipt.PolicyNumber,x.SupplierReceipt.Material.Name,x.SupplierReceipt.Material.UnitOfMeasure.Name,x.SupplierReceipt.Quantity,x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0),x.SupplierReceipt.UnitPrice,x.SupplierReceipt.TaxPercent,x.SupplierReceipt.Total)).ToListAsync();
+    public async Task<List<PolicyOption>> GetCustomerPoliciesAsync(Guid customerId,Guid? excludePaymentId=null)=>await db.CustomerDeliveries.AsNoTracking().Where(x=>x.CustomerId==customerId&&x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0)>0).OrderBy(x=>x.SupplierReceipt.Date).ThenBy(x=>x.SupplierReceipt.PolicyNumber)
+        .Select(x=>new PolicyOption(x.Id,x.SupplierReceipt.PolicyNumber,x.SupplierReceipt.Date,x.SupplierReceipt.Material.Name,x.SupplierReceipt.Material.UnitOfMeasure.Name,x.SupplierReceipt.Quantity,x.Total-x.Payments.Where(p=>!excludePaymentId.HasValue||p.Id!=excludePaymentId.Value).Sum(p=>(decimal?)p.Amount??0),x.SupplierReceipt.UnitPrice,x.SupplierReceipt.TaxPercent,x.SupplierReceipt.Total)).ToListAsync();
     public async Task CreateCustomerPaymentAsync(CustomerPaymentCommand c)
     {
         await CreateCustomerPaymentsAsync(new(c.CustomerId,c.Date,c.PaymentMethodId,c.Comments,[new(c.CustomerDeliveryId,c.Amount)]));

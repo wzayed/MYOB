@@ -8,6 +8,14 @@ public sealed class SupplierPaymentForm
 {
  public Guid Id{get;set;}[Required]public Guid SupplierId{get;set;}[Required]public Guid SupplierReceiptId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0.01","999999999")]public decimal Amount{get;set;}[Required]public Guid PaymentMethodId{get;set;}public string? Comments{get;set;}
 }
+public sealed class SupplierPaymentBatchForm
+{
+ [Required]public Guid SupplierId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0.01","999999999",ErrorMessage="أدخل إجمالي المبلغ المدفوع")]public decimal TotalAmount{get;set;}[Required]public Guid PaymentMethodId{get;set;}public string? Comments{get;set;}public List<SupplierPaymentAllocationForm> Allocations{get;set;}=[];
+}
+public sealed class SupplierPaymentAllocationForm
+{
+ [Required]public Guid SupplierReceiptId{get;set;}[Range(typeof(decimal),"0","999999999")]public decimal Amount{get;set;}
+}
 public sealed class CustomerDeliveryForm
 {
  public Guid Id{get;set;}[Required]public Guid CustomerId{get;set;}[Required]public Guid SupplierReceiptId{get;set;}[Required]public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);[Range(typeof(decimal),"0","999999999")]public decimal UnitPrice{get;set;}[Range(typeof(decimal),"0","100")]public decimal TaxPercent{get;set;}public string? Details{get;set;}
