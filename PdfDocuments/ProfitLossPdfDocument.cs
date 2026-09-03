@@ -23,6 +23,7 @@ public sealed class ProfitLossPdfDocument(ProfitLossResult report, ProfitLossFil
                 Section(c, "المحقق", report.Realized, "صافي الربح/الخسارة", Colors.Green.Darken2);
                 c.Item().PaddingTop(18);
                 Section(c, "غير المحقق - مبالغ لم تُحصّل", report.Unrealized, "صافي الربح/الخسارة غير المحقق", Colors.Orange.Darken2);
+                c.Item().PaddingTop(10).Background(Colors.Blue.Lighten4).Padding(8).AlignRight().Text($"إجمالي الربح/الخسارة: {report.Realized.Sum(x=>x.Value)+report.Unrealized.Sum(x=>x.Value):N2}").FontSize(13).Bold();
                 c.Item().PaddingTop(18);
                 UndeliveredSection(c,report.UndeliveredGoods);
             });

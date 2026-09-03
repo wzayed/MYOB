@@ -1,2 +1,43 @@
 @model MYOB.DTOs.AccountStatementResult
-<div class="table-responsive"><table class="table table-bordered table-striped align-middle"><thead><tr><th>التاريخ</th><th>التفاصيل</th><th>منه</th><th>له</th><th>الرصيد</th></tr></thead><tbody>@if(Model.Rows.Count==0){<tr><td colspan="5" class="text-center py-4">لا توجد حركات في الفترة المحددة</td></tr>}@foreach(var row in Model.Rows){<tr><td>@row.Date.ToString("yyyy/MM/dd")</td><td>@row.Details</td><td>@(row.Debit==0?"":row.Debit.ToString("N2"))</td><td>@(row.Credit==0?"":row.Credit.ToString("N2"))</td><td>@row.Balance.ToString("N2")</td></tr>}</tbody><tfoot><tr class="fw-bold"><td colspan="2">الإجماليات</td><td>@Model.TotalDebit.ToString("N2")</td><td>@Model.TotalCredit.ToString("N2")</td><td></td></tr><tr class="fw-bold"><td colspan="4">الرصيد الختامي</td><td>@Model.ClosingBalance.ToString("N2")</td></tr></tfoot></table></div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>التاريخ</th>
+                <th>التفاصيل</th>
+                <th>منه</th>
+                <th>له</th>
+                <th>الرصيد</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Rows.Count == 0)
+            {
+                <tr><td colspan="5" class="text-center py-4">لا توجد حركات في الفترة المحددة</td></tr>
+            }
+            @foreach (var row in Model.Rows)
+            {
+                <tr>
+                    <td>@row.Date.ToString("yyyy/MM/dd")</td>
+                    <td>@row.Details</td>
+                    <td>@(row.Debit == 0 ? "" : row.Debit.ToString("N2"))</td>
+                    <td>@(row.Credit == 0 ? "" : row.Credit.ToString("N2"))</td>
+                    <td>@row.Balance.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr class="fw-bold">
+                <td colspan="2">الإجماليات</td>
+                <td>@Model.TotalDebit.ToString("N2")</td>
+                <td>@Model.TotalCredit.ToString("N2")</td>
+                <td></td>
+            </tr>
+            <tr class="fw-bold">
+                <td colspan="4">الرصيد الختامي</td>
+                <td>@Model.ClosingBalance.ToString("N2")</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
