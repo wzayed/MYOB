@@ -1,5 +1,6 @@
-using System.ComponentModel.DataAnnotations;using Microsoft.AspNetCore.Authentication;using Microsoft.AspNetCore.Identity;using Microsoft.AspNetCore.Mvc;using Microsoft.AspNetCore.Mvc.RazorPages;using MYOB.Models;using MYOB.Services;
+using System.ComponentModel.DataAnnotations;using Microsoft.AspNetCore.Authentication;using Microsoft.AspNetCore.Authorization;using Microsoft.AspNetCore.Identity;using Microsoft.AspNetCore.Mvc;using Microsoft.AspNetCore.Mvc.RazorPages;using MYOB.Models;using MYOB.Services;
 namespace MYOB.Areas.Identity.Pages.Account;
+[AllowAnonymous]
 public class LoginModel(SignInManager<ApplicationUser> signInManager,IAuditService audit):PageModel
 {
     [BindProperty]public InputModel Input{get;set;}=new();public string? ReturnUrl{get;set;}public sealed class InputModel{[Required,EmailAddress]public string Email{get;set;}="";[Required,DataType(DataType.Password)]public string Password{get;set;}="";public bool RememberMe{get;set;}}

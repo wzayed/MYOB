@@ -55,11 +55,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         var now = DateTimeOffset.UtcNow;
         var context = _httpContextAccessor.HttpContext;
         var principal = context?.User;
+        var entries = ChangeTracker.Entries<AuditableEntity>().Where(e => e.State is EntityState.Added or EntityState.Modified).ToList();
+        if (context is not null && principal?.Identity?.IsAuthenticated != true && entries.Count > 0)
+            throw new UnauthorizedAccessException("لا يمكن تعديل بيانات النظام دون تسجيل الدخول.");
         var userName = principal?.Identity?.Name ?? "النظام";
         var userId = principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var path = context?.Request.Path.Value ?? "System";
         var ip = context?.Connection.RemoteIpAddress?.ToString();
-        foreach (var entry in ChangeTracker.Entries<AuditableEntity>().Where(e => e.State is EntityState.Added or EntityState.Modified).ToList())
+        foreach (var entry in entries)
         {
             if (entry.State == EntityState.Added) { entry.Entity.CreatedAt = now; entry.Entity.CreatedBy = userName; }
             else { entry.Entity.UpdatedAt = now; entry.Entity.UpdatedBy = userName; }
