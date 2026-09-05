@@ -7,6 +7,8 @@
     var unrealizedTotal = Model.Report.Unrealized.Sum(x => x.Value);
     var totalProfit = realizedTotal + unrealizedTotal;
     var undeliveredCost = Model.Report.UndeliveredGoods.Sum(x => x.PurchaseCost);
+    var fromDate = Model.Filter.FromDate?.ToString("yyyy/MM/dd");
+    var toDate = Model.Filter.ToDate?.ToString("yyyy/MM/dd");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -14,8 +16,8 @@
     <a asp-page-handler="Pdf"
        asp-route-Filter.SupplierId="@Model.Filter.SupplierId"
        asp-route-Filter.CustomerId="@Model.Filter.CustomerId"
-       asp-route-Filter.FromDate="@Model.Filter.FromDate"
-       asp-route-Filter.ToDate="@Model.Filter.ToDate"
+       asp-route-Filter.FromDate="@fromDate"
+       asp-route-Filter.ToDate="@toDate"
        class="btn btn-danger">
         تصدير PDF
     </a>
@@ -25,11 +27,13 @@
     <div class="row g-3">
         <div class="col-md-3">
             <label class="form-label">من تاريخ</label>
-            <input asp-for="Filter.FromDate" type="date" class="form-control" />
+            <input asp-for="Filter.FromDate" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+            <span asp-validation-for="Filter.FromDate" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label class="form-label">إلى تاريخ</label>
-            <input asp-for="Filter.ToDate" type="date" class="form-control" />
+            <input asp-for="Filter.ToDate" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+            <span asp-validation-for="Filter.ToDate" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label class="form-label">المورد</label>

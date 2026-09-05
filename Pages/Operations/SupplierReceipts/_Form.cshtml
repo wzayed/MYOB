@@ -1,3 +1,39 @@
 @model MYOB.DTOs.SupplierReceiptForm
-@{var materials=ViewData["Materials"] as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>??[];var selectedMaterial=materials.FirstOrDefault(x=>x.Value==Model.MaterialId.ToString());}
-<form method="post" class="card card-body"><input asp-for="Id" type="hidden"/><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="row g-3"><div class="col-md-4"><label class="form-label">المورد</label><select asp-for="SupplierId" asp-items="@(ViewData["Suppliers"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList)" class="form-select"><option value="">اختر المورد</option></select></div><div class="col-md-8"><label class="form-label">الخامة</label><div class="searchable-combobox" data-searchable-combobox><input class="form-control searchable-combobox-input" value="@selectedMaterial?.Text" placeholder="ابحث واختر الخامة" autocomplete="off" role="combobox" aria-expanded="false"/><input asp-for="MaterialId" type="hidden" data-combobox-value/><div class="searchable-combobox-menu" hidden>@foreach(var material in materials){<button type="button" class="searchable-combobox-option" data-value="@material.Value">@material.Text</button>}<div class="searchable-combobox-empty" hidden>لا توجد نتائج</div></div></div><span asp-validation-for="MaterialId" class="text-danger"></span></div><div class="col-md-3"><label class="form-label">التاريخ</label><input asp-for="Date" type="date" class="form-control"/></div><div class="col-md-5"><label class="form-label">رقم البوليصة / أمر الشحن</label><input asp-for="PolicyNumber" class="form-control"/></div><div class="col-md-2"><label class="form-label">الوزن / الكمية</label><input id="qty" asp-for="Quantity" class="form-control"/></div><div class="col-md-2"><label class="form-label">سعر الوحدة</label><input id="price" asp-for="UnitPrice" class="form-control"/></div><div class="col-md-3"><label class="form-label">الضريبة</label><div class="input-group"><input id="tax" asp-for="TaxPercent" class="form-control"/><span class="input-group-text">%</span></div></div><div class="col-md-3"><label class="form-label">الإجمالي</label><input id="total" class="form-control" readonly/></div><div class="col-md-6"><label class="form-label">تفاصيل</label><input asp-for="Details" class="form-control"/></div></div><div class="mt-3"><button class="btn btn-primary">حفظ</button> <a asp-page="Index" class="btn btn-secondary">إلغاء</a></div></form>
+@{
+    var materials = ViewData["Materials"] as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? [];
+    var selectedMaterial = materials.FirstOrDefault(x => x.Value == Model.MaterialId.ToString());
+}
+<form method="post" class="card card-body">
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">المورد</label>
+            <select asp-for="SupplierId" asp-items="@(ViewData["Suppliers"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList)" class="form-select"><option value="">اختر المورد</option></select>
+        </div>
+        <div class="col-md-8">
+            <label class="form-label">الخامة</label>
+            <div class="searchable-combobox" data-searchable-combobox>
+                <input class="form-control searchable-combobox-input" value="@selectedMaterial?.Text" placeholder="ابحث واختر الخامة" autocomplete="off" role="combobox" aria-expanded="false" />
+                <input asp-for="MaterialId" type="hidden" data-combobox-value />
+                <div class="searchable-combobox-menu" hidden>
+                    @foreach (var material in materials) { <button type="button" class="searchable-combobox-option" data-value="@material.Value">@material.Text</button> }
+                    <div class="searchable-combobox-empty" hidden>لا توجد نتائج</div>
+                </div>
+            </div>
+            <span asp-validation-for="MaterialId" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">التاريخ</label>
+            <input asp-for="Date" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+            <span asp-validation-for="Date" class="text-danger"></span>
+        </div>
+        <div class="col-md-5"><label class="form-label">رقم البوليصة / أمر الشحن</label><input asp-for="PolicyNumber" class="form-control" /></div>
+        <div class="col-md-2"><label class="form-label">الوزن / الكمية</label><input id="qty" asp-for="Quantity" class="form-control" /></div>
+        <div class="col-md-2"><label class="form-label">سعر الوحدة</label><input id="price" asp-for="UnitPrice" class="form-control" /></div>
+        <div class="col-md-3"><label class="form-label">الضريبة</label><div class="input-group"><input id="tax" asp-for="TaxPercent" class="form-control" /><span class="input-group-text">%</span></div></div>
+        <div class="col-md-3"><label class="form-label">الإجمالي</label><input id="total" class="form-control" readonly /></div>
+        <div class="col-md-6"><label class="form-label">تفاصيل</label><input asp-for="Details" class="form-control" /></div>
+    </div>
+    <div class="mt-3"><button class="btn btn-primary">حفظ</button> <a asp-page="Index" class="btn btn-secondary">إلغاء</a></div>
+</form>

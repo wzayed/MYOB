@@ -1,3 +1,21 @@
 @page
 @model MYOB.Pages.Operations.CustomerDeliveries.IndexModel
-@{ViewData["Title"]="توريد بضاعة لعميل";}<div class="d-flex justify-content-between mb-3"><h1>توريد بضاعة لعميل</h1>@if(Model.CanAdd){<a asp-page="Create" class="btn btn-primary">إضافة حركة توريد</a>}</div>@if(TempData["Message"] is string m){<div class="alert alert-success">@m</div>}@if(TempData["Error"] is string e){<div class="alert alert-danger">@e</div>}<form method="get" class="row g-2 mb-3"><div class="col-md-5"><input asp-for="Search" class="form-control" placeholder="العميل أو البوليصة أو الخامة"/></div><div class="col-auto"><button class="btn btn-outline-primary">بحث</button> <a asp-page="Index" class="btn btn-outline-secondary">مسح المرشحات</a></div></form><table class="table table-striped"><thead><tr><th>التاريخ</th><th>العميل</th><th>البوليصة</th><th>الخامة</th><th>الكمية</th><th>الوحدة</th><th>الإجمالي</th><th>إجراءات</th></tr></thead><tbody>@if(Model.Items.Count==0){<tr><td colspan="8" class="text-center py-4">لا توجد بيانات</td></tr>}@foreach(var x in Model.Items){<tr><td>@x.Date</td><td>@x.Customer.Name</td><td>@x.SupplierReceipt.PolicyNumber</td><td>@x.SupplierReceipt.Material.Name</td><td>@x.SupplierReceipt.Quantity.ToString("N2")</td><td>@x.SupplierReceipt.Material.UnitOfMeasure.Name</td><td>@x.Total.ToString("N2")</td><td>@if(Model.CanUpdate){<a asp-page="Edit" asp-route-id="@x.Id" class="btn btn-sm btn-outline-primary">تعديل</a>} @if(Model.CanDelete){<form method="post" asp-page-handler="Delete" asp-route-id="@x.Id" class="d-inline"><button class="btn btn-sm btn-outline-danger">حذف</button></form>}</td></tr>}</tbody></table><nav><ul class="pagination">@for(var p=1;p<=Model.TotalPages;p++){<li class="page-item @(p==Model.PageNumber?"active":"")"><a class="page-link" asp-route-PageNumber="@p" asp-route-Search="@Model.Search">@p</a></li>}</ul></nav>
+@{ ViewData["Title"] = "توريد بضاعة لعميل"; }
+<div class="d-flex justify-content-between mb-3"><h1>توريد بضاعة لعميل</h1>@if (Model.CanAdd) { <a asp-page="Create" class="btn btn-primary">إضافة حركة توريد</a> }</div>
+@if (TempData["Message"] is string message) { <div class="alert alert-success">@message</div> }
+@if (TempData["Error"] is string error) { <div class="alert alert-danger">@error</div> }
+<form method="get" class="row g-2 mb-3"><div class="col-md-5"><input asp-for="Search" class="form-control" placeholder="العميل أو البوليصة أو الخامة" /></div><div class="col-auto"><button class="btn btn-outline-primary">بحث</button> <a asp-page="Index" class="btn btn-outline-secondary">مسح المرشحات</a></div></form>
+<div class="table-responsive"><table class="table table-striped">
+    <thead><tr><th>التاريخ</th><th>العميل</th><th>البوليصة</th><th>الخامة</th><th>الكمية</th><th>الوحدة</th><th>الإجمالي</th><th>إجراءات</th></tr></thead>
+    <tbody>
+    @if (Model.Items.Count == 0) { <tr><td colspan="8" class="text-center py-4">لا توجد بيانات</td></tr> }
+    @foreach (var item in Model.Items)
+    {
+        <tr><td>@item.Date.ToString("yyyy/MM/dd")</td><td>@item.Customer.Name</td><td>@item.SupplierReceipt.PolicyNumber</td><td>@item.SupplierReceipt.Material.Name</td><td>@item.SupplierReceipt.Quantity.ToString("N2")</td><td>@item.SupplierReceipt.Material.UnitOfMeasure.Name</td><td>@item.Total.ToString("N2")</td><td>
+            @if (Model.CanUpdate) { <a asp-page="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">تعديل</a> }
+            @if (Model.CanDelete) { <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" class="d-inline"><button class="btn btn-sm btn-outline-danger">حذف</button></form> }
+        </td></tr>
+    }
+    </tbody>
+</table></div>
+<nav><ul class="pagination">@for (var p = 1; p <= Model.TotalPages; p++) { <li class="page-item @(p == Model.PageNumber ? "active" : "")"><a class="page-link" asp-route-PageNumber="@p" asp-route-Search="@Model.Search">@p</a></li> }</ul></nav>

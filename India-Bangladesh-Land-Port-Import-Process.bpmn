@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  id="Definitions_IndiaBangladeshLandPort"
+  targetNamespace="http://example.com/bpmn/india-bangladesh-land-port"
+  exporter="Camunda Modeler"
+  exporterVersion="5.0">
+
+  <bpmn:process id="Process_IndiaBangladeshLandPort" name="India to Bangladesh Land-Port Import Process" isExecutable="false" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Current-state process map for a road consignment moving from Petrapole, India to the Bangladesh land port. Manual document movement, physical signatures, queues, and official inspection/testing steps are represented explicitly.</bpmn:documentation>
+
+    <bpmn:laneSet id="LaneSet_Stakeholders">
+      <bpmn:lane id="Lane_Exporter" name="Indian Exporter / Indian C&amp;F">
+        <bpmn:flowNodeRef>StartEvent_ExportOrder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareDocuments</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SubmitIndianCustoms</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ProcessExportPermit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConsignmentReady</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_IndianBorder" name="Indian Customs / Border Operations">
+        <bpmn:flowNodeRef>Task_CargoArrivesPetrapole</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IndianBorderHandover</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CustomsCopies</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerifyStampCarPass</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReturnStampedCarPass</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_TruckCrossesBorder</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_BangladeshEntry" name="Bangladesh Entry Team (BGB / BLPA / Customs / Bonderman)">
+        <bpmn:flowNodeRef>Task_JointEntryReception</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateIGM</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_BangladeshCF" name="Bangladesh C&amp;F / Posting Staff">
+        <bpmn:flowNodeRef>Task_WeighbridgeEntry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GetReleaseNote</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FindWarehouseSpot</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GetWarehouseApproval</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreatePosting</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_WarehouseBLPA" name="Warehouse / BLPA Port Authority">
+        <bpmn:flowNodeRef>Task_MoveToWarehouse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UnloadCargo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_TakeReleaseToBLPA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BLPAApproval</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PayPortFees</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EndorseAndGatePass</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerifyExitDocuments</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_PaymentDateCurrent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PayAdditionalCharge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_TruckReleased</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_BangladeshCustoms" name="Bangladesh Customs">
+        <bpmn:flowNodeRef>Task_SubmitBillOfEntry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RiskChannel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_WaitForExamOfficer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PhysicalExamination</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RiskMerge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TestRequired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_OfficialTesting</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TestMerge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AssessDuties</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IssueDeliveryOrder</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ImporterBank" name="Importer / Bank">
+        <bpmn:flowNodeRef>Task_ProvideImportDocuments</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PayCustomsDuty</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_ExportOrder" name="Consignment planned">
+      <bpmn:outgoing>Flow_01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_PrepareDocuments" name="Prepare invoice and packing list">
+      <bpmn:incoming>Flow_01</bpmn:incoming><bpmn:outgoing>Flow_02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_SubmitIndianCustoms" name="Submit documents for Indian export clearance">
+      <bpmn:incoming>Flow_02</bpmn:incoming><bpmn:outgoing>Flow_03</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_ProcessExportPermit" name="Process export permit in Customs e-EXP">
+      <bpmn:incoming>Flow_03</bpmn:incoming><bpmn:outgoing>Flow_04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="Task_ConsignmentReady" name="Confirm consignment ready for export">
+      <bpmn:incoming>Flow_04</bpmn:incoming><bpmn:outgoing>Flow_05</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_CargoArrivesPetrapole" name="Cargo arrives at Petrapole">
+      <bpmn:incoming>Flow_05</bpmn:incoming><bpmn:outgoing>Flow_06</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="Task_IndianBorderHandover" name="Carry and hand over border documents at zero point">
+      <bpmn:incoming>Flow_06</bpmn:incoming><bpmn:outgoing>Flow_07</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_CustomsCopies" name="Indian Customs retains 1 copy; driver receives 2 copies">
+      <bpmn:incoming>Flow_07</bpmn:incoming><bpmn:outgoing>Flow_08</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_VerifyStampCarPass" name="Verify documents and stamp CARPASS">
+      <bpmn:incoming>Flow_08</bpmn:incoming><bpmn:outgoing>Flow_09</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_ReturnStampedCarPass" name="Carry stamped CARPASS back to zero point">
+      <bpmn:incoming>Flow_09</bpmn:incoming><bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="Task_TruckCrossesBorder" name="Indian truck crosses into Bangladesh">
+      <bpmn:incoming>Flow_10</bpmn:incoming><bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="Task_JointEntryReception" name="Jointly receive truck at entry gate">
+      <bpmn:incoming>Flow_11</bpmn:incoming><bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_CreateIGM" name="Record CARPASS entry number as IGM">
+      <bpmn:incoming>Flow_12</bpmn:incoming><bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="Task_WeighbridgeEntry" name="Weigh truck at port weighbridge">
+      <bpmn:incoming>Flow_13</bpmn:incoming><bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="Task_GetReleaseNote" name="Inform shed officer; obtain and manually approve release note">
+      <bpmn:incoming>Flow_14</bpmn:incoming><bpmn:outgoing>Flow_15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_FindWarehouseSpot" name="Find and wait for a free warehouse spot">
+      <bpmn:incoming>Flow_15</bpmn:incoming><bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_GetWarehouseApproval" name="Obtain warehouse approval and signature">
+      <bpmn:incoming>Flow_16</bpmn:incoming><bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_CreatePosting" name="Posting officer assigns truck to warehouse">
+      <bpmn:incoming>Flow_17</bpmn:incoming><bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="Task_MoveToWarehouse" name="Move truck to warehouse and wait for receipt">
+      <bpmn:incoming>Flow_18</bpmn:incoming><bpmn:outgoing>Flow_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_UnloadCargo" name="Unload cargo">
+      <bpmn:incoming>Flow_19</bpmn:incoming><bpmn:outgoing>Flow_20</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="Task_ProvideImportDocuments" name="Provide bank-endorsed import documents">
+      <bpmn:incoming>Flow_20</bpmn:incoming><bpmn:outgoing>Flow_21</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_SubmitBillOfEntry" name="Submit Bill of Entry in ASYCUDA with hard copies">
+      <bpmn:incoming>Flow_21</bpmn:incoming><bpmn:outgoing>Flow_22</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_RiskChannel" name="Risk channel?" default="Flow_24">
+      <bpmn:incoming>Flow_22</bpmn:incoming><bpmn:outgoing>Flow_23</bpmn:outgoing><bpmn:outgoing>Flow_24</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_WaitForExamOfficer" name="Queue for assigned examination officer">
+      <bpmn:incoming>Flow_23</bpmn:incoming><bpmn:outgoing>Flow_25</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_PhysicalExamination" name="Conduct 100% physical examination">
+      <bpmn:incoming>Flow_25</bpmn:incoming><bpmn:outgoing>Flow_26</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_RiskMerge">
+      <bpmn:incoming>Flow_24</bpmn:incoming><bpmn:incoming>Flow_26</bpmn:incoming><bpmn:outgoing>Flow_27</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_TestRequired" name="Official testing required?" default="Flow_29">
+      <bpmn:incoming>Flow_27</bpmn:incoming><bpmn:outgoing>Flow_28</bpmn:outgoing><bpmn:outgoing>Flow_29</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_OfficialTesting" name="Perform required BSTI, laboratory, or quarantine testing">
+      <bpmn:incoming>Flow_28</bpmn:incoming><bpmn:outgoing>Flow_30</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_TestMerge">
+      <bpmn:incoming>Flow_29</bpmn:incoming><bpmn:incoming>Flow_30</bpmn:incoming><bpmn:outgoing>Flow_31</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_AssessDuties" name="Assess duties under tariff and applicable SRO">
+      <bpmn:incoming>Flow_31</bpmn:incoming><bpmn:outgoing>Flow_32</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_PayCustomsDuty" name="Pay Customs duty online or by bank transfer">
+      <bpmn:incoming>Flow_32</bpmn:incoming><bpmn:outgoing>Flow_33</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_IssueDeliveryOrder" name="Issue Customs delivery / release order">
+      <bpmn:incoming>Flow_33</bpmn:incoming><bpmn:outgoing>Flow_34</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_TakeReleaseToBLPA" name="Carry physical release order to BLPA main office">
+      <bpmn:incoming>Flow_34</bpmn:incoming><bpmn:outgoing>Flow_35</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_BLPAApproval" name="Obtain BLPA billing approvals">
+      <bpmn:incoming>Flow_35</bpmn:incoming><bpmn:outgoing>Flow_36</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_PayPortFees" name="Pay port fees at bank">
+      <bpmn:incoming>Flow_36</bpmn:incoming><bpmn:outgoing>Flow_37</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_EndorseAndGatePass" name="Obtain billing endorsement and gate / exit pass">
+      <bpmn:incoming>Flow_37</bpmn:incoming><bpmn:outgoing>Flow_38</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_VerifyExitDocuments" name="Verify exit documents and BLPA payment date">
+      <bpmn:incoming>Flow_38</bpmn:incoming><bpmn:incoming>Flow_41</bpmn:incoming><bpmn:outgoing>Flow_39</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_PaymentDateCurrent" name="Payment date is today?" default="Flow_40">
+      <bpmn:incoming>Flow_39</bpmn:incoming><bpmn:outgoing>Flow_40</bpmn:outgoing><bpmn:outgoing>Flow_42</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_PayAdditionalCharge" name="Pay applicable additional charge">
+      <bpmn:incoming>Flow_40</bpmn:incoming><bpmn:outgoing>Flow_41</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_TruckReleased" name="Truck exits port">
+      <bpmn:incoming>Flow_42</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="StartEvent_ExportOrder" targetRef="Task_PrepareDocuments"/>
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Task_PrepareDocuments" targetRef="Task_SubmitIndianCustoms"/>
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="Task_SubmitIndianCustoms" targetRef="Task_ProcessExportPermit"/>
+    <bpmn:sequenceFlow id="Flow_04" sourceRef="Task_ProcessExportPermit" targetRef="Task_ConsignmentReady"/>
+    <bpmn:sequenceFlow id="Flow_05" sourceRef="Task_ConsignmentReady" targetRef="Task_CargoArrivesPetrapole"/>
+    <bpmn:sequenceFlow id="Flow_06" sourceRef="Task_CargoArrivesPetrapole" targetRef="Task_IndianBorderHandover"/>
+    <bpmn:sequenceFlow id="Flow_07" sourceRef="Task_IndianBorderHandover" targetRef="Task_CustomsCopies"/>
+    <bpmn:sequenceFlow id="Flow_08" sourceRef="Task_CustomsCopies" targetRef="Task_VerifyStampCarPass"/>
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Task_VerifyStampCarPass" targetRef="Task_ReturnStampedCarPass"/>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_ReturnStampedCarPass" targetRef="Task_TruckCrossesBorder"/>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_TruckCrossesBorder" targetRef="Task_JointEntryReception"/>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_JointEntryReception" targetRef="Task_CreateIGM"/>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_CreateIGM" targetRef="Task_WeighbridgeEntry"/>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_WeighbridgeEntry" targetRef="Task_GetReleaseNote"/>
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_GetReleaseNote" targetRef="Task_FindWarehouseSpot"/>
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_FindWarehouseSpot" targetRef="Task_GetWarehouseApproval"/>
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Task_GetWarehouseApproval" targetRef="Task_CreatePosting"/>
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Task_CreatePosting" targetRef="Task_MoveToWarehouse"/>
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Task_MoveToWarehouse" targetRef="Task_UnloadCargo"/>
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Task_UnloadCargo" targetRef="Task_ProvideImportDocuments"/>
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_ProvideImportDocuments" targetRef="Task_SubmitBillOfEntry"/>
+    <bpmn:sequenceFlow id="Flow_22" sourceRef="Task_SubmitBillOfEntry" targetRef="Gateway_RiskChannel"/>
+    <bpmn:sequenceFlow id="Flow_23" name="Red" sourceRef="Gateway_RiskChannel" targetRef="Task_WaitForExamOfficer">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${riskChannel == 'RED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_24" name="Yellow / Green" sourceRef="Gateway_RiskChannel" targetRef="Gateway_RiskMerge"/>
+    <bpmn:sequenceFlow id="Flow_25" sourceRef="Task_WaitForExamOfficer" targetRef="Task_PhysicalExamination"/>
+    <bpmn:sequenceFlow id="Flow_26" sourceRef="Task_PhysicalExamination" targetRef="Gateway_RiskMerge"/>
+    <bpmn:sequenceFlow id="Flow_27" sourceRef="Gateway_RiskMerge" targetRef="Gateway_TestRequired"/>
+    <bpmn:sequenceFlow id="Flow_28" name="Yes" sourceRef="Gateway_TestRequired" targetRef="Task_OfficialTesting">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${testingRequired == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_29" name="No" sourceRef="Gateway_TestRequired" targetRef="Gateway_TestMerge"/>
+    <bpmn:sequenceFlow id="Flow_30" sourceRef="Task_OfficialTesting" targetRef="Gateway_TestMerge"/>
+    <bpmn:sequenceFlow id="Flow_31" sourceRef="Gateway_TestMerge" targetRef="Task_AssessDuties"/>
+    <bpmn:sequenceFlow id="Flow_32" sourceRef="Task_AssessDuties" targetRef="Task_PayCustomsDuty"/>
+    <bpmn:sequenceFlow id="Flow_33" sourceRef="Task_PayCustomsDuty" targetRef="Task_IssueDeliveryOrder"/>
+    <bpmn:sequenceFlow id="Flow_34" sourceRef="Task_IssueDeliveryOrder" targetRef="Task_TakeReleaseToBLPA"/>
+    <bpmn:sequenceFlow id="Flow_35" sourceRef="Task_TakeReleaseToBLPA" targetRef="Task_BLPAApproval"/>
+    <bpmn:sequenceFlow id="Flow_36" sourceRef="Task_BLPAApproval" targetRef="Task_PayPortFees"/>
+    <bpmn:sequenceFlow id="Flow_37" sourceRef="Task_PayPortFees" targetRef="Task_EndorseAndGatePass"/>
+    <bpmn:sequenceFlow id="Flow_38" sourceRef="Task_EndorseAndGatePass" targetRef="Task_VerifyExitDocuments"/>
+    <bpmn:sequenceFlow id="Flow_39" sourceRef="Task_VerifyExitDocuments" targetRef="Gateway_PaymentDateCurrent"/>
+    <bpmn:sequenceFlow id="Flow_40" name="No" sourceRef="Gateway_PaymentDateCurrent" targetRef="Task_PayAdditionalCharge"/>
+    <bpmn:sequenceFlow id="Flow_41" sourceRef="Task_PayAdditionalCharge" targetRef="Task_VerifyExitDocuments"/>
+    <bpmn:sequenceFlow id="Flow_42" name="Yes" sourceRef="Gateway_PaymentDateCurrent" targetRef="EndEvent_TruckReleased">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${blpaPaymentDateCurrent == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:textAnnotation id="TextAnnotation_ExportDocs"><bpmn:text>Export handover set: invoice, packing list, BL/shipping bill, export permit, CARPASS, manifest, and driver details.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Association_ExportDocs" sourceRef="Task_IndianBorderHandover" targetRef="TextAnnotation_ExportDocs"/>
+    <bpmn:textAnnotation id="TextAnnotation_ImportDocs"><bpmn:text>Import set: bank-endorsed documents, LC copies, authorization letters, and SRO exemption support where applicable (including undertakings, guarantees, and authority clearances).</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Association_ImportDocs" sourceRef="Task_ProvideImportDocuments" targetRef="TextAnnotation_ImportDocs"/>
+    <bpmn:textAnnotation id="TextAnnotation_Manual"><bpmn:text>Most Bangladesh-side handling is manual and requires original hard copies and physical signatures; only initial Bill of Entry submission is electronic in ASYCUDA.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Association_Manual" sourceRef="Task_SubmitBillOfEntry" targetRef="TextAnnotation_Manual"/>
+    <bpmn:textAnnotation id="TextAnnotation_Queues"><bpmn:text>Known delay points include examination-officer availability, testing queues, warehouse-slot availability, weighbridges, and movement of physical documents.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Association_Queues" sourceRef="Task_WaitForExamOfficer" targetRef="TextAnnotation_Queues"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Main">
+    <bpmndi:BPMNPlane id="BPMNPlane_Main" bpmnElement="Process_IndiaBangladeshLandPort">
+      <bpmndi:BPMNShape id="Lane_Exporter_di" bpmnElement="Lane_Exporter" isHorizontal="true"><dc:Bounds x="80" y="80" width="6320" height="140"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_IndianBorder_di" bpmnElement="Lane_IndianBorder" isHorizontal="true"><dc:Bounds x="80" y="220" width="6320" height="140"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_BangladeshEntry_di" bpmnElement="Lane_BangladeshEntry" isHorizontal="true"><dc:Bounds x="80" y="360" width="6320" height="140"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_BangladeshCF_di" bpmnElement="Lane_BangladeshCF" isHorizontal="true"><dc:Bounds x="80" y="500" width="6320" height="140"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_WarehouseBLPA_di" bpmnElement="Lane_WarehouseBLPA" isHorizontal="true"><dc:Bounds x="80" y="640" width="6320" height="140"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_BangladeshCustoms_di" bpmnElement="Lane_BangladeshCustoms" isHorizontal="true"><dc:Bounds x="80" y="780" width="6320" height="160"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ImporterBank_di" bpmnElement="Lane_ImporterBank" isHorizontal="true"><dc:Bounds x="80" y="940" width="6320" height="140"/></bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="StartEvent_ExportOrder_di" bpmnElement="StartEvent_ExportOrder"><dc:Bounds x="150" y="132" width="36" height="36"/><bpmndi:BPMNLabel><dc:Bounds x="128" y="174" width="82" height="27"/></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareDocuments_di" bpmnElement="Task_PrepareDocuments"><dc:Bounds x="230" y="110" width="130" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SubmitIndianCustoms_di" bpmnElement="Task_SubmitIndianCustoms"><dc:Bounds x="410" y="110" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProcessExportPermit_di" bpmnElement="Task_ProcessExportPermit"><dc:Bounds x="600" y="110" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConsignmentReady_di" bpmnElement="Task_ConsignmentReady"><dc:Bounds x="790" y="110" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CargoArrivesPetrapole_di" bpmnElement="Task_CargoArrivesPetrapole"><dc:Bounds x="980" y="250" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IndianBorderHandover_di" bpmnElement="Task_IndianBorderHandover"><dc:Bounds x="1170" y="250" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CustomsCopies_di" bpmnElement="Task_CustomsCopies"><dc:Bounds x="1370" y="250" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerifyStampCarPass_di" bpmnElement="Task_VerifyStampCarPass"><dc:Bounds x="1570" y="250" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReturnStampedCarPass_di" bpmnElement="Task_ReturnStampedCarPass"><dc:Bounds x="1760" y="250" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TruckCrossesBorder_di" bpmnElement="Task_TruckCrossesBorder"><dc:Bounds x="1960" y="250" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_JointEntryReception_di" bpmnElement="Task_JointEntryReception"><dc:Bounds x="2150" y="390" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateIGM_di" bpmnElement="Task_CreateIGM"><dc:Bounds x="2350" y="390" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_WeighbridgeEntry_di" bpmnElement="Task_WeighbridgeEntry"><dc:Bounds x="2540" y="530" width="140" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GetReleaseNote_di" bpmnElement="Task_GetReleaseNote"><dc:Bounds x="2730" y="530" width="160" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FindWarehouseSpot_di" bpmnElement="Task_FindWarehouseSpot"><dc:Bounds x="2940" y="530" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GetWarehouseApproval_di" bpmnElement="Task_GetWarehouseApproval"><dc:Bounds x="3140" y="530" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreatePosting_di" bpmnElement="Task_CreatePosting"><dc:Bounds x="3340" y="530" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MoveToWarehouse_di" bpmnElement="Task_MoveToWarehouse"><dc:Bounds x="3540" y="670" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UnloadCargo_di" bpmnElement="Task_UnloadCargo"><dc:Bounds x="3740" y="670" width="130" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProvideImportDocuments_di" bpmnElement="Task_ProvideImportDocuments"><dc:Bounds x="3920" y="970" width="160" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SubmitBillOfEntry_di" bpmnElement="Task_SubmitBillOfEntry"><dc:Bounds x="4130" y="820" width="160" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RiskChannel_di" bpmnElement="Gateway_RiskChannel" isMarkerVisible="true"><dc:Bounds x="4340" y="835" width="50" height="50"/><bpmndi:BPMNLabel><dc:Bounds x="4320" y="892" width="91" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_WaitForExamOfficer_di" bpmnElement="Task_WaitForExamOfficer"><dc:Bounds x="4440" y="790" width="150" height="70"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PhysicalExamination_di" bpmnElement="Task_PhysicalExamination"><dc:Bounds x="4640" y="790" width="150" height="70"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RiskMerge_di" bpmnElement="Gateway_RiskMerge" isMarkerVisible="true"><dc:Bounds x="4840" y="835" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TestRequired_di" bpmnElement="Gateway_TestRequired" isMarkerVisible="true"><dc:Bounds x="4940" y="835" width="50" height="50"/><bpmndi:BPMNLabel><dc:Bounds x="4909" y="892" width="112" height="27"/></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OfficialTesting_di" bpmnElement="Task_OfficialTesting"><dc:Bounds x="5040" y="790" width="160" height="70"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TestMerge_di" bpmnElement="Gateway_TestMerge" isMarkerVisible="true"><dc:Bounds x="5250" y="835" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AssessDuties_di" bpmnElement="Task_AssessDuties"><dc:Bounds x="5350" y="820" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PayCustomsDuty_di" bpmnElement="Task_PayCustomsDuty"><dc:Bounds x="5550" y="970" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IssueDeliveryOrder_di" bpmnElement="Task_IssueDeliveryOrder"><dc:Bounds x="5750" y="820" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TakeReleaseToBLPA_di" bpmnElement="Task_TakeReleaseToBLPA"><dc:Bounds x="5750" y="660" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BLPAApproval_di" bpmnElement="Task_BLPAApproval"><dc:Bounds x="5550" y="660" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PayPortFees_di" bpmnElement="Task_PayPortFees"><dc:Bounds x="5350" y="660" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EndorseAndGatePass_di" bpmnElement="Task_EndorseAndGatePass"><dc:Bounds x="5150" y="660" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerifyExitDocuments_di" bpmnElement="Task_VerifyExitDocuments"><dc:Bounds x="4930" y="660" width="160" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PaymentDateCurrent_di" bpmnElement="Gateway_PaymentDateCurrent" isMarkerVisible="true"><dc:Bounds x="4780" y="675" width="50" height="50"/><bpmndi:BPMNLabel><dc:Bounds x="4739" y="730" width="132" height="27"/></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PayAdditionalCharge_di" bpmnElement="Task_PayAdditionalCharge"><dc:Bounds x="4580" y="660" width="150" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_TruckReleased_di" bpmnElement="EndEvent_TruckReleased"><dc:Bounds x="4787" y="742" width="36" height="36"/><bpmndi:BPMNLabel><dc:Bounds x="4828" y="750" width="80" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="TextAnnotation_ExportDocs_di" bpmnElement="TextAnnotation_ExportDocs"><dc:Bounds x="1170" y="365" width="330" height="62"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_ImportDocs_di" bpmnElement="TextAnnotation_ImportDocs"><dc:Bounds x="3900" y="1088" width="380" height="78"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_Manual_di" bpmnElement="TextAnnotation_Manual"><dc:Bounds x="4100" y="690" width="360" height="70"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_Queues_di" bpmnElement="TextAnnotation_Queues"><dc:Bounds x="4440" y="952" width="390" height="70"/></bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_01_di" bpmnElement="Flow_01"><di:waypoint x="186" y="150"/><di:waypoint x="230" y="150"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02_di" bpmnElement="Flow_02"><di:waypoint x="360" y="150"/><di:waypoint x="410" y="150"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03_di" bpmnElement="Flow_03"><di:waypoint x="550" y="150"/><di:waypoint x="600" y="150"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04_di" bpmnElement="Flow_04"><di:waypoint x="740" y="150"/><di:waypoint x="790" y="150"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05_di" bpmnElement="Flow_05"><di:waypoint x="930" y="150"/><di:waypoint x="950" y="150"/><di:waypoint x="950" y="290"/><di:waypoint x="980" y="290"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06_di" bpmnElement="Flow_06"><di:waypoint x="1120" y="290"/><di:waypoint x="1170" y="290"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07_di" bpmnElement="Flow_07"><di:waypoint x="1320" y="290"/><di:waypoint x="1370" y="290"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08_di" bpmnElement="Flow_08"><di:waypoint x="1520" y="290"/><di:waypoint x="1570" y="290"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09_di" bpmnElement="Flow_09"><di:waypoint x="1710" y="290"/><di:waypoint x="1760" y="290"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10"><di:waypoint x="1910" y="290"/><di:waypoint x="1960" y="290"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11"><di:waypoint x="2100" y="290"/><di:waypoint x="2125" y="290"/><di:waypoint x="2125" y="430"/><di:waypoint x="2150" y="430"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12"><di:waypoint x="2300" y="430"/><di:waypoint x="2350" y="430"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13"><di:waypoint x="2490" y="430"/><di:waypoint x="2515" y="430"/><di:waypoint x="2515" y="570"/><di:waypoint x="2540" y="570"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14"><di:waypoint x="2680" y="570"/><di:waypoint x="2730" y="570"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15"><di:waypoint x="2890" y="570"/><di:waypoint x="2940" y="570"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16"><di:waypoint x="3090" y="570"/><di:waypoint x="3140" y="570"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17"><di:waypoint x="3290" y="570"/><di:waypoint x="3340" y="570"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18"><di:waypoint x="3490" y="570"/><di:waypoint x="3515" y="570"/><di:waypoint x="3515" y="710"/><di:waypoint x="3540" y="710"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19"><di:waypoint x="3690" y="710"/><di:waypoint x="3740" y="710"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20"><di:waypoint x="3870" y="710"/><di:waypoint x="3895" y="710"/><di:waypoint x="3895" y="1010"/><di:waypoint x="3920" y="1010"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_21_di" bpmnElement="Flow_21"><di:waypoint x="4080" y="1010"/><di:waypoint x="4105" y="1010"/><di:waypoint x="4105" y="860"/><di:waypoint x="4130" y="860"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_22_di" bpmnElement="Flow_22"><di:waypoint x="4290" y="860"/><di:waypoint x="4340" y="860"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_23_di" bpmnElement="Flow_23"><di:waypoint x="4365" y="835"/><di:waypoint x="4365" y="825"/><di:waypoint x="4440" y="825"/><bpmndi:BPMNLabel><dc:Bounds x="4380" y="806" width="20" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_24_di" bpmnElement="Flow_24"><di:waypoint x="4390" y="860"/><di:waypoint x="4840" y="860"/><bpmndi:BPMNLabel><dc:Bounds x="4524" y="866" width="79" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_25_di" bpmnElement="Flow_25"><di:waypoint x="4590" y="825"/><di:waypoint x="4640" y="825"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_26_di" bpmnElement="Flow_26"><di:waypoint x="4790" y="825"/><di:waypoint x="4815" y="825"/><di:waypoint x="4815" y="860"/><di:waypoint x="4840" y="860"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_27_di" bpmnElement="Flow_27"><di:waypoint x="4890" y="860"/><di:waypoint x="4940" y="860"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_28_di" bpmnElement="Flow_28"><di:waypoint x="4965" y="835"/><di:waypoint x="4965" y="825"/><di:waypoint x="5040" y="825"/><bpmndi:BPMNLabel><dc:Bounds x="4986" y="806" width="18" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_29_di" bpmnElement="Flow_29"><di:waypoint x="4990" y="860"/><di:waypoint x="5250" y="860"/><bpmndi:BPMNLabel><dc:Bounds x="5112" y="866" width="15" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_30_di" bpmnElement="Flow_30"><di:waypoint x="5200" y="825"/><di:waypoint x="5225" y="825"/><di:waypoint x="5225" y="860"/><di:waypoint x="5250" y="860"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_31_di" bpmnElement="Flow_31"><di:waypoint x="5300" y="860"/><di:waypoint x="5350" y="860"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_32_di" bpmnElement="Flow_32"><di:waypoint x="5500" y="860"/><di:waypoint x="5525" y="860"/><di:waypoint x="5525" y="1010"/><di:waypoint x="5550" y="1010"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_33_di" bpmnElement="Flow_33"><di:waypoint x="5700" y="1010"/><di:waypoint x="5725" y="1010"/><di:waypoint x="5725" y="860"/><di:waypoint x="5750" y="860"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_34_di" bpmnElement="Flow_34"><di:waypoint x="5825" y="820"/><di:waypoint x="5825" y="740"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_35_di" bpmnElement="Flow_35"><di:waypoint x="5750" y="700"/><di:waypoint x="5700" y="700"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_36_di" bpmnElement="Flow_36"><di:waypoint x="5550" y="700"/><di:waypoint x="5500" y="700"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_37_di" bpmnElement="Flow_37"><di:waypoint x="5350" y="700"/><di:waypoint x="5300" y="700"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_38_di" bpmnElement="Flow_38"><di:waypoint x="5150" y="700"/><di:waypoint x="5090" y="700"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_39_di" bpmnElement="Flow_39"><di:waypoint x="4930" y="700"/><di:waypoint x="4830" y="700"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_40_di" bpmnElement="Flow_40"><di:waypoint x="4780" y="700"/><di:waypoint x="4730" y="700"/><bpmndi:BPMNLabel><dc:Bounds x="4747" y="681" width="15" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_41_di" bpmnElement="Flow_41"><di:waypoint x="4655" y="660"/><di:waypoint x="4655" y="625"/><di:waypoint x="5010" y="625"/><di:waypoint x="5010" y="660"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_42_di" bpmnElement="Flow_42"><di:waypoint x="4805" y="725"/><di:waypoint x="4805" y="742"/><bpmndi:BPMNLabel><dc:Bounds x="4811" y="724" width="18" height="14"/></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Association_ExportDocs_di" bpmnElement="Association_ExportDocs"><di:waypoint x="1245" y="330"/><di:waypoint x="1245" y="365"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_ImportDocs_di" bpmnElement="Association_ImportDocs"><di:waypoint x="4000" y="1050"/><di:waypoint x="4000" y="1088"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Manual_di" bpmnElement="Association_Manual"><di:waypoint x="4210" y="820"/><di:waypoint x="4210" y="760"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Queues_di" bpmnElement="Association_Queues"><di:waypoint x="4515" y="860"/><di:waypoint x="4515" y="952"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

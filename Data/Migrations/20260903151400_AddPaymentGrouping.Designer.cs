@@ -4,6 +4,7 @@ using MYOB.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MYOB.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260903151400_AddPaymentGrouping")]
+    partial class AddPaymentGrouping
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -525,78 +528,6 @@ namespace MYOB.Data.Migrations
                     b.ToTable("Suppliers");
                 });
 
-            modelBuilder.Entity("MYOB.Models.SupplierCredit", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Comments")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("OriginalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("PaymentMethodId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("RemainingAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("SourcePaymentGroupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SourceSupplierReceiptId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SupplierId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PaymentMethodId");
-
-                    b.HasIndex("SourcePaymentGroupId")
-                        .IsUnique()
-                        .HasFilter("[IsDeleted] = 0");
-
-                    b.HasIndex("SourceSupplierReceiptId");
-
-                    b.HasIndex("SupplierId", "RemainingAmount");
-
-                    b.ToTable("SupplierCredits");
-                });
-
             modelBuilder.Entity("MYOB.Models.SupplierPayment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -618,10 +549,6 @@ namespace MYOB.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<decimal>("CreditAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
@@ -641,9 +568,6 @@ namespace MYOB.Data.Migrations
                     b.Property<Guid>("PaymentMethodId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SupplierCreditId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("SupplierId")
                         .HasColumnType("uniqueidentifier");
 
@@ -660,8 +584,6 @@ namespace MYOB.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PaymentMethodId");
-
-                    b.HasIndex("SupplierCreditId");
 
                     b.HasIndex("SupplierId");
 
@@ -996,33 +918,6 @@ namespace MYOB.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MYOB.Models.SupplierCredit", b =>
-                {
-                    b.HasOne("MYOB.Models.PaymentMethod", "PaymentMethod")
-                        .WithMany()
-                        .HasForeignKey("PaymentMethodId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MYOB.Models.SupplierReceipt", "SourceSupplierReceipt")
-                        .WithMany()
-                        .HasForeignKey("SourceSupplierReceiptId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MYOB.Models.Supplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("PaymentMethod");
-
-                    b.Navigation("SourceSupplierReceipt");
-
-                    b.Navigation("Supplier");
-                });
-
             modelBuilder.Entity("MYOB.Models.SupplierPayment", b =>
                 {
                     b.HasOne("MYOB.Models.PaymentMethod", "PaymentMethod")
@@ -1030,11 +925,6 @@ namespace MYOB.Data.Migrations
                         .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("MYOB.Models.SupplierCredit", "SupplierCredit")
-                        .WithMany()
-                        .HasForeignKey("SupplierCreditId")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MYOB.Models.Supplier", "Supplier")
                         .WithMany()
@@ -1051,8 +941,6 @@ namespace MYOB.Data.Migrations
                     b.Navigation("PaymentMethod");
 
                     b.Navigation("Supplier");
-
-                    b.Navigation("SupplierCredit");
 
                     b.Navigation("SupplierReceipt");
                 });

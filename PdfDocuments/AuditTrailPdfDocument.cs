@@ -22,7 +22,7 @@ public sealed class AuditTrailPdfDocument(IReadOnlyList<AuditReportRow> rows, Au
             page.Footer().AlignCenter().Text(x => { x.Span("صفحة "); x.CurrentPageNumber(); x.Span(" من "); x.TotalPages(); });
         });
     }
-    private string FilterText() => $"المستخدم: {filter.UserName ?? "الكل"} | الشاشة: {filter.Screen ?? "الكل"} | الإجراء: {filter.Action ?? "الكل"} | من: {filter.FromDate?.ToString() ?? "البداية"} | إلى: {filter.ToDate?.ToString() ?? "النهاية"}";
+    private string FilterText() => $"المستخدم: {filter.UserName ?? "الكل"} | الشاشة: {filter.Screen ?? "الكل"} | الإجراء: {filter.Action ?? "الكل"} | من: {filter.FromDate?.ToString("yyyy/MM/dd") ?? "البداية"} | إلى: {filter.ToDate?.ToString("yyyy/MM/dd") ?? "النهاية"}";
     private static void Header(IContainer c,string text)=>c.Background(Colors.Blue.Darken2).Padding(5).AlignRight().Text(text).FontColor(Colors.White).Bold();
     private static void Cell(IContainer c,string? text)=>c.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text(text??"-");
 }

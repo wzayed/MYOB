@@ -1,4 +1,80 @@
 @page "{id:guid}"
 @model MYOB.Pages.Operations.CustomerPayments.EditModel
-@{ViewData["Title"]="تعديل حركة قبض";ViewData["Methods"]=Model.Methods;ViewData["Policies"]=Model.Policies;}<h1>تعديل قبض من عميل</h1><div class="alert alert-info">العميل: @Model.CustomerName</div><partial name="_Form" model="Model.Item"/>
-@section Scripts{<partial name="_FormScripts"/>}
+@using System.Globalization
+@{
+    ViewData["Title"] = "تعديل حركة قبض";
+}
+<h1>تعديل قبض من عميل</h1>
+<div class="alert alert-info">العميل: @Model.CustomerName</div>
+<form method="post" class="card card-body">
+    <input asp-for="Item.CustomerId" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <label class="form-label">التاريخ</label>
+            <input asp-for="Item.Date" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+            <span asp-validation-for="Item.Date" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">طريقة السداد</label>
+            <select asp-for="Item.PaymentMethodId" asp-items="Model.Methods" class="form-select"><option value="">اختر طريقة السداد</option></select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">إجمالي المبلغ المستلم</label>
+            <input id="receiptTotal" asp-for="Item.TotalAmount" class="form-control" min="0.01" step="0.01" />
+            <span asp-validation-for="Item.TotalAmount" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">المتبقي للتوزيع</label>
+            <input id="distributionRemaining" class="form-control" readonly />
+        </div>
+        <div class="col-12"><label class="form-label">ملاحظات</label><input asp-for="Item.Comments" class="form-control" /></div>
+    </div>
+    <h5>توزيع المبلغ على البوالص</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead><tr><th>تاريخ البوليصة</th><th>رقم البوليصة / أمر الشحن</th><th>الخامة</th><th>المبلغ المتاح</th><th>المبلغ المحصل</th></tr></thead>
+            <tbody>
+            @for (var i = 0; i < Model.Item.Allocations.Count; i++)
+            {
+                var allocation = Model.Item.Allocations[i];
+                var policy = Model.Policies.First(x => x.Id == allocation.CustomerDeliveryId);
+                <tr>
+                    <td>@policy.PolicyDate.ToString("yyyy/MM/dd")</td>
+                    <td>@policy.PolicyNumber<input asp-for="Item.Allocations[i].CustomerDeliveryId" type="hidden" /></td>
+                    <td>@policy.MaterialName</td>
+                    <td>@policy.RemainingAmount.ToString("N2")</td>
+                    <td><input asp-for="Item.Allocations[i].Amount" class="form-control payment-allocation" min="0" max="@policy.RemainingAmount.ToString(CultureInfo.InvariantCulture)" step="0.01" /></td>
+                </tr>
+            }
+            </tbody>
+            <tfoot><tr class="fw-bold"><td colspan="4">إجمالي المبلغ الموزع</td><td id="allocationTotal">0.00</td></tr></tfoot>
+        </table>
+    </div>
+    <div class="mt-3"><button id="savePayment" class="btn btn-primary">حفظ جميع التعديلات</button> <a asp-page="Index" class="btn btn-secondary">إلغاء</a></div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const inputs = [...document.querySelectorAll('.payment-allocation')];
+            const total = document.getElementById('receiptTotal');
+            const allocated = document.getElementById('allocationTotal');
+            const remaining = document.getElementById('distributionRemaining');
+            const save = document.getElementById('savePayment');
+            const update = () => {
+                const value = parseFloat(total?.value) || 0;
+                const used = inputs.reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+                const left = value - used;
+                const normalizedLeft = Math.abs(left) < 0.005 ? 0 : left;
+                allocated.textContent = used.toFixed(2);
+                remaining.value = normalizedLeft.toFixed(2);
+                remaining.classList.toggle('is-invalid', normalizedLeft < 0);
+                save.disabled = value <= 0 || normalizedLeft !== 0 || inputs.length === 0;
+            };
+            total?.addEventListener('input', update);
+            inputs.forEach(input => input.addEventListener('input', update));
+            update();
+        })();
+    </script>
+}

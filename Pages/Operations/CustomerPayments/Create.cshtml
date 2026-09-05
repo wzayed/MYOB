@@ -24,7 +24,8 @@
         <div class="row g-3 mb-3">
             <div class="col-md-3">
                 <label class="form-label">التاريخ</label>
-                <input asp-for="Item.Date" type="date" class="form-control" />
+                <input asp-for="Item.Date" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+                <span asp-validation-for="Item.Date" class="text-danger"></span>
             </div>
             <div class="col-md-3">
                 <label class="form-label">طريقة السداد</label>
@@ -116,13 +117,14 @@
                 const received = parseFloat(receiptTotal?.value) || 0;
                 const allocated = inputs.reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
                 const left = received - allocated;
+                const normalizedLeft = Math.abs(left) < 0.005 ? 0 : left;
 
                 if (allocatedTotal) allocatedTotal.textContent = allocated.toFixed(2);
                 if (remaining) {
-                    remaining.value = left.toFixed(2);
-                    remaining.classList.toggle('is-invalid', left < 0);
+                    remaining.value = normalizedLeft.toFixed(2);
+                    remaining.classList.toggle('is-invalid', normalizedLeft < 0);
                 }
-                if (save) save.disabled = received <= 0 || Math.abs(left) > .009 || inputs.length === 0;
+                if (save) save.disabled = received <= 0 || normalizedLeft !== 0 || inputs.length === 0;
             };
 
             receiptTotal?.addEventListener('input', update);

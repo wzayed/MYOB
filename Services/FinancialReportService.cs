@@ -22,12 +22,15 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
         var to = filter.ToDate!.Value;
         var opening = supplier.OpeningBalance
             + (await db.SupplierReceipts.Where(x => x.SupplierId == supplier.Id && x.Date < from).SumAsync(x => (decimal?)x.Total) ?? 0m);
-        opening -= await db.SupplierPayments.Where(x => x.SupplierId == supplier.Id && x.Date < from).SumAsync(x => (decimal?)x.Amount) ?? 0m;
+        opening -= await db.SupplierPayments.Where(x => x.SupplierId == supplier.Id && x.Date < from).SumAsync(x => (decimal?)(x.Amount-x.CreditAmount)) ?? 0m;
+        opening -= await db.SupplierCredits.Where(x => x.SupplierId == supplier.Id && x.Date < from).SumAsync(x => (decimal?)x.OriginalAmount) ?? 0m;
         var receipts = await db.SupplierReceipts.AsNoTracking().Where(x => x.SupplierId == supplier.Id && x.Date >= from && x.Date <= to)
             .Select(x => new Movement(x.Date, "استلام - " + x.PolicyNumber + " - " + x.Material.Name + " - " + x.Quantity + " × " + x.UnitPrice, x.Total, 0m, x.CreatedAt)).ToListAsync();
-        var payments = await db.SupplierPayments.AsNoTracking().Where(x => x.SupplierId == supplier.Id && x.Date >= from && x.Date <= to)
-            .Select(x => new Movement(x.Date, "دفع - " + x.SupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name + (x.Comments == null ? "" : " - " + x.Comments), 0m, x.Amount, x.CreatedAt)).ToListAsync();
-        return Build(supplier.Name, opening, receipts.Concat(payments));
+        var payments = await db.SupplierPayments.AsNoTracking().Where(x => x.SupplierId == supplier.Id && x.Date >= from && x.Date <= to && x.Amount > x.CreditAmount)
+            .Select(x => new Movement(x.Date, "دفع - " + x.SupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name + (x.Comments == null ? "" : " - " + x.Comments), 0m, x.Amount-x.CreditAmount, x.CreatedAt)).ToListAsync();
+        var credits = await db.SupplierCredits.AsNoTracking().Where(x => x.SupplierId == supplier.Id && x.Date >= from && x.Date <= to)
+            .Select(x => new Movement(x.Date, "رصيد دائن - متبقي من دفعة البوليصة " + x.SourceSupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name, 0m, x.OriginalAmount, x.CreatedAt)).ToListAsync();
+        return Build(supplier.Name, opening, receipts.Concat(payments).Concat(credits));
     }
 
     public async Task<AccountStatementResult?> GetCustomerStatementAsync(AccountStatementFilter filter)

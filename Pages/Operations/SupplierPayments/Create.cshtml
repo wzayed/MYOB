@@ -19,18 +19,34 @@
 {
     <form method="post" class="card card-body">
         <input asp-for="Item.SupplierId" type="hidden" />
+        <input asp-for="Item.SupplierCreditId" type="hidden" />
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        @if (Model.AvailableCredit is not null)
+        {
+            <div class="alert alert-info">
+                رصيد مرحل متاح: <strong>@Model.AvailableCredit.RemainingAmount.ToString("N2")</strong>
+                — @Model.AvailableCredit.CarryForwardNote
+            </div>
+        }
 
         <div class="row g-3 mb-3">
             <div class="col-md-3">
                 <label class="form-label">التاريخ</label>
-                <input asp-for="Item.Date" type="date" class="form-control" />
+                <input asp-for="Item.Date" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+                <span asp-validation-for="Item.Date" class="text-danger"></span>
             </div>
             <div class="col-md-3">
                 <label class="form-label">طريقة السداد</label>
-                <select asp-for="Item.PaymentMethodId" asp-items="Model.Methods" class="form-select">
-                    <option value="">اختر طريقة السداد</option>
-                </select>
+                @if (Model.AvailableCredit is not null)
+                {
+                    <input asp-for="Item.PaymentMethodId" type="hidden" />
+                    <input class="form-control" value="@Model.AvailableCredit.PaymentMethodName" readonly />
+                }
+                else
+                {
+                    <select asp-for="Item.PaymentMethodId" asp-items="Model.Methods" class="form-select"><option value="">اختر طريقة السداد</option></select>
+                }
             </div>
             <div class="col-md-3">
                 <label class="form-label">إجمالي المبلغ المدفوع</label>
@@ -38,12 +54,17 @@
                 <span asp-validation-for="Item.TotalAmount" class="text-danger"></span>
             </div>
             <div class="col-md-3">
-                <label class="form-label">المتبقي للتوزيع</label>
+                <label class="form-label">الرصيد الدائن الجديد</label>
                 <input id="distributionRemaining" class="form-control" value="0.00" readonly />
             </div>
+            @if (Model.AvailableCredit is not null)
+            {
+                <div class="col-md-3"><label class="form-label">الرصيد المرحل المستخدم</label><input id="creditUsed" class="form-control" readonly /></div>
+                <div class="col-md-3"><label class="form-label">المبلغ المدفوع الآن</label><input id="cashPaidNow" class="form-control" readonly /></div>
+            }
             <div class="col-12">
                 <label class="form-label">ملاحظات</label>
-                <input asp-for="Item.Comments" class="form-control" />
+                <input asp-for="Item.Comments" class="form-control" readonly="@(Model.AvailableCredit is not null ? "readonly" : null)" />
             </div>
         </div>
 
@@ -111,18 +132,25 @@
             const allocatedTotal = document.getElementById('allocationTotal');
             const remaining = document.getElementById('distributionRemaining');
             const save = document.getElementById('savePayment');
+            const creditUsedField = document.getElementById('creditUsed');
+            const cashPaidNow = document.getElementById('cashPaidNow');
+            const availableCredit = @Html.Raw(Model.AvailableCredit?.RemainingAmount.ToString(CultureInfo.InvariantCulture) ?? "0");
 
             const update = () => {
                 const paid = parseFloat(paymentTotal?.value) || 0;
                 const allocated = inputs.reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
                 const left = paid - allocated;
+                const normalizedLeft = Math.abs(left) < 0.005 ? 0 : left;
+                const creditUsed = Math.min(availableCredit, allocated);
 
                 if (allocatedTotal) allocatedTotal.textContent = allocated.toFixed(2);
                 if (remaining) {
-                    remaining.value = left.toFixed(2);
-                    remaining.classList.toggle('is-invalid', left < 0);
+                    remaining.value = normalizedLeft.toFixed(2);
+                    remaining.classList.toggle('is-invalid', normalizedLeft < 0);
                 }
-                if (save) save.disabled = paid <= 0 || Math.abs(left) > .009 || inputs.length === 0;
+                if (creditUsedField) creditUsedField.value = creditUsed.toFixed(2);
+                if (cashPaidNow) cashPaidNow.value = Math.max(0, paid - creditUsed).toFixed(2);
+                if (save) save.disabled = paid <= 0 || allocated <= 0 || normalizedLeft < 0 || inputs.length === 0;
             };
 
             paymentTotal?.addEventListener('input', update);

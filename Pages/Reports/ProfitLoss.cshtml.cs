@@ -6,6 +6,7 @@ using MYOB.Data;
 using MYOB.DTOs;
 using MYOB.PdfDocuments;
 using MYOB.Services;
+using MYOB.Support;
 using QuestPDF.Fluent;
 
 namespace MYOB.Pages.Reports;
@@ -33,7 +34,7 @@ public class ProfitLossModel(IFinancialReportService reports, ApplicationDbConte
         return File(new ProfitLossPdfDocument(report, Filter, SupplierName, CustomerName).GeneratePdf(), "application/pdf", $"profit-loss-{DateTime.Now:yyyyMMddHHmm}.pdf");
     }
 
-    private bool ValidRange() => Filter.FromDate.HasValue && Filter.ToDate.HasValue && Filter.FromDate <= Filter.ToDate;
+    private bool ValidRange() => ModelState.IsValid && Filter.FromDate.HasValue && Filter.ToDate.HasValue && Filter.FromDate <= Filter.ToDate && Filter.ToDate <= BusinessDate.Today;
     private async Task LoadFiltersAsync()
     {
         var suppliers = await db.Suppliers.AsNoTracking().OrderBy(x => x.Name).ToListAsync();

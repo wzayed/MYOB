@@ -6,6 +6,7 @@ using MYOB.Data;
 using MYOB.DTOs;
 using MYOB.PdfDocuments;
 using MYOB.Services;
+using MYOB.Support;
 using QuestPDF.Fluent;
 
 namespace MYOB.Pages.Reports;
@@ -30,6 +31,6 @@ public class CustomerStatementModel(IFinancialReportService reports, Application
         return File(new AccountStatementPdfDocument("كشف حساب عميل", report, Filter).GeneratePdf(), "application/pdf", $"customer-statement-{DateTime.Now:yyyyMMddHHmm}.pdf");
     }
 
-    private bool ValidRange() => Filter.FromDate.HasValue && Filter.ToDate.HasValue && Filter.FromDate <= Filter.ToDate;
+    private bool ValidRange() => ModelState.IsValid && Filter.FromDate.HasValue && Filter.ToDate.HasValue && Filter.FromDate <= Filter.ToDate && Filter.ToDate <= BusinessDate.Today;
     private async Task LoadCustomersAsync() => Customers = new(await db.Customers.AsNoTracking().OrderBy(x => x.Name).ToListAsync(), "Id", "Name");
 }

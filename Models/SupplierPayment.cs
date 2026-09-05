@@ -3,6 +3,9 @@ namespace MYOB.Models;
 public class SupplierPayment : AuditableEntity
 {
     public Guid SupplierId{get;set;} public Supplier Supplier{get;set;}=null!;
+    public Guid? PaymentGroupId{get;set;}
+    public Guid? SupplierCreditId{get;set;} public SupplierCredit? SupplierCredit{get;set;}
+    public decimal CreditAmount{get;set;}
     public Guid SupplierReceiptId{get;set;} public SupplierReceipt SupplierReceipt{get;set;}=null!;
     [DataType(DataType.Date)] public DateOnly Date{get;set;}=DateOnly.FromDateTime(DateTime.Today);
     public decimal Amount{get;set;}

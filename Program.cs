@@ -6,6 +6,13 @@ using MYOB.Support;
 using QuestPDF.Infrastructure;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authorization;
+using System.Globalization;
+
+var applicationCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+applicationCulture.DateTimeFormat.ShortDatePattern = "yyyy/MM/dd";
+applicationCulture.DateTimeFormat.DateSeparator = "/";
+CultureInfo.DefaultThreadCurrentCulture = applicationCulture;
+CultureInfo.DefaultThreadCurrentUICulture = applicationCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
