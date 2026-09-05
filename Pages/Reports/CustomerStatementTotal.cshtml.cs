@@ -11,7 +11,7 @@ using QuestPDF.Fluent;
 
 namespace MYOB.Pages.Reports;
 
-public class CustomerStatementModel(IFinancialReportService reports, ApplicationDbContext db) : PageModel
+public class CustomerStatementTotalModel(IFinancialReportService reports, ApplicationDbContext db) : PageModel
 {
     [BindProperty(SupportsGet = true)] public AccountStatementFilter Filter { get; set; } = new();
     public AccountStatementResult? Report { get; private set; }
@@ -21,18 +21,22 @@ public class CustomerStatementModel(IFinancialReportService reports, Application
     public async Task OnGetAsync()
     {
         await LoadListsAsync();
-        if (Filter.PartyId.HasValue && ValidRange()) Report = await reports.GetCustomerStatementAsync(Filter);
+        if (Filter.PartyId.HasValue && ValidRange())
+            Report = await reports.GetTotalCustomerStatementAsync(Filter);
     }
 
     public async Task<IActionResult> OnGetPdfAsync()
     {
         if (!Filter.PartyId.HasValue || !ValidRange()) return BadRequest("حدد العميل والفترة بصورة صحيحة.");
-        var report = await reports.GetCustomerStatementAsync(Filter);
+        var report = await reports.GetTotalCustomerStatementAsync(Filter);
         if (report is null) return NotFound();
-        return File(new AccountStatementPdfDocument("كشف حساب عميل", "العميل", "المورد", report, Filter).GeneratePdf(), "application/pdf", $"customer-statement-{DateTime.Now:yyyyMMddHHmm}.pdf");
+        return File(new AccountStatementPdfDocument("إجمالى كشف حساب عميل", "العميل", "المورد", report, Filter).GeneratePdf(),
+            "application/pdf", $"customer-total-statement-{DateTime.Now:yyyyMMddHHmm}.pdf");
     }
 
-    private bool ValidRange() => ModelState.IsValid && Filter.FromDate.HasValue && Filter.ToDate.HasValue && Filter.FromDate <= Filter.ToDate && Filter.ToDate <= BusinessDate.Today;
+    private bool ValidRange() => ModelState.IsValid && Filter.FromDate.HasValue && Filter.ToDate.HasValue
+        && Filter.FromDate <= Filter.ToDate && Filter.ToDate <= BusinessDate.Today;
+
     private async Task LoadListsAsync()
     {
         Customers = new(await db.Customers.AsNoTracking().OrderBy(x => x.Name).ToListAsync(), "Id", "Name");

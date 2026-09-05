@@ -5,7 +5,7 @@ using QuestPDF.Infrastructure;
 
 namespace MYOB.PdfDocuments;
 
-public sealed class AccountStatementPdfDocument(string title, AccountStatementResult report, AccountStatementFilter filter) : IDocument
+public sealed class AccountStatementPdfDocument(string title, string partyLabel, string relatedPartyLabel, AccountStatementResult report, AccountStatementFilter filter) : IDocument
 {
     public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
     public void Compose(IDocumentContainer container)
@@ -16,7 +16,8 @@ public sealed class AccountStatementPdfDocument(string title, AccountStatementRe
             page.Header().Column(c =>
             {
                 c.Item().AlignRight().Text(title).FontSize(18).Bold();
-                c.Item().AlignRight().Text($"الاسم: {report.PartyName} | من: {filter.FromDate:yyyy/MM/dd} | إلى: {filter.ToDate:yyyy/MM/dd}").FontColor(Colors.Grey.Darken2);
+                c.Item().AlignRight().Text($"{partyLabel}: {report.PartyName} | {relatedPartyLabel}: {report.RelatedPartyName ?? "الكل"}").FontColor(Colors.Grey.Darken2);
+                c.Item().AlignRight().Text($"من: {filter.FromDate:yyyy/MM/dd} | إلى: {filter.ToDate:yyyy/MM/dd}").FontColor(Colors.Grey.Darken2);
             });
             page.Content().PaddingVertical(10).Column(column =>
             {

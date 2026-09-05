@@ -1,14 +1,14 @@
 @page
-@model MYOB.Pages.Reports.SupplierStatementModel
+@model MYOB.Pages.Reports.SupplierStatementTotalModel
 
 @{
-    ViewData["Title"] = "كشف حساب مورد";
+    ViewData["Title"] = "إجمالى كشف حساب مورد";
     var fromDate = Model.Filter.FromDate?.ToString("yyyy/MM/dd");
     var toDate = Model.Filter.ToDate?.ToString("yyyy/MM/dd");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>كشف حساب مورد</h1>
+    <h1>إجمالى كشف حساب مورد</h1>
     @if (Model.Report is not null)
     {
         <a asp-page-handler="Pdf"
@@ -16,9 +16,7 @@
            asp-route-Filter.RelatedPartyId="@Model.Filter.RelatedPartyId"
            asp-route-Filter.FromDate="@fromDate"
            asp-route-Filter.ToDate="@toDate"
-           class="btn btn-danger">
-            تصدير PDF
-        </a>
+           class="btn btn-danger">تصدير PDF</a>
     }
 </div>
 
