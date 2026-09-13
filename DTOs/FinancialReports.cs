@@ -9,6 +9,7 @@ public sealed class AccountStatementFilter
     [Required(ErrorMessage = "إلى تاريخ مطلوب"), NotFutureDate, DisplayFormat(DataFormatString = "{0:yyyy/MM/dd}", ApplyFormatInEditMode = true)] public DateOnly? ToDate { get; set; } = BusinessDate.Today;
     [Required(ErrorMessage = "الاختيار مطلوب")] public Guid? PartyId { get; set; }
     public Guid? RelatedPartyId { get; set; }
+    public bool ShowPrivateNotes { get; set; }
 }
 
 public sealed record AccountStatementRow(DateOnly Date, string Details, decimal Debit, decimal Credit, decimal Balance);

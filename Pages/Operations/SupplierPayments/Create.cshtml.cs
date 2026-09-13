@@ -34,7 +34,7 @@ public class CreateModel(ApplicationDbContext db,ITransactionService transaction
         if(Item.TotalAmount>0&&allocated>Item.TotalAmount)ModelState.AddModelError(string.Empty,$"المبلغ الموزع أكبر من إجمالي المبلغ بمقدار: {allocated-Item.TotalAmount:N2}");
         if(ModelState.IsValid)try
         {
-            await transactions.CreateSupplierPaymentsAsync(new(Item.SupplierId,Item.Date,Item.TotalAmount,Item.PaymentMethodId,Item.Comments,Item.SupplierCreditId,Item.Allocations.Where(x=>x.Amount>0).Select(x=>new SupplierPaymentAllocation(x.SupplierReceiptId,x.Amount)).ToList()));
+            await transactions.CreateSupplierPaymentsAsync(new(Item.SupplierId,Item.Date,Item.TotalAmount,Item.PaymentMethodId,Item.Comments,Item.SupplierCreditId,Item.Allocations.Where(x=>x.Amount>0).Select(x=>new SupplierPaymentAllocation(x.SupplierReceiptId,x.Amount)).ToList()) { PublicComments = Item.PublicComments });
             TempData["Message"]="تم تسجيل الدفع وتوزيعه على البوالص المحددة";return RedirectToPage("Index");
         }
         catch(InvalidOperationException e){ModelState.AddModelError(string.Empty,e.Message);}

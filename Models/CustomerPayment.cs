@@ -9,4 +9,5 @@ public class CustomerPayment : AuditableEntity
     public decimal Amount{get;set;}
     public Guid PaymentMethodId{get;set;} public PaymentMethod PaymentMethod{get;set;}=null!;
     [MaxLength(2000)] public string? Comments{get;set;}
+    [MaxLength(2000)] public string? PublicComments { get; set; }
 }

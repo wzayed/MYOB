@@ -42,9 +42,9 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
         var receipts = await receiptQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
             .Select(x => new Movement(x.Date, "استلام - " + x.PolicyNumber + " - " + x.Material.Name + " - " + x.Quantity + " × " + x.UnitPrice, x.Total, 0m, x.CreatedAt)).ToListAsync();
         var payments = await paymentQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to && x.Amount > x.CreditAmount)
-            .Select(x => new Movement(x.Date, "دفع - " + x.SupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name + (x.Comments == null ? "" : " - " + x.Comments), 0m, x.Amount - x.CreditAmount, x.CreatedAt)).ToListAsync();
+            .Select(x => new Movement(x.Date, "دفع - " + x.SupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name + ((filter.ShowPrivateNotes ? x.Comments : x.PublicComments) == null ? "" : " - " + (filter.ShowPrivateNotes ? x.Comments : x.PublicComments)), 0m, x.Amount - x.CreditAmount, x.CreatedAt)).ToListAsync();
         var credits = await creditQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
-            .Select(x => new Movement(x.Date, "رصيد دائن - متبقي من دفعة البوليصة " + x.SourceSupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name, 0m, x.OriginalAmount, x.CreatedAt)).ToListAsync();
+            .Select(x => new Movement(x.Date, "رصيد دائن - متبقي من دفعة البوليصة " + x.SourceSupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name + ((filter.ShowPrivateNotes ? x.Comments : x.PublicComments) == null ? "" : " - " + (filter.ShowPrivateNotes ? x.Comments : x.PublicComments)), 0m, x.OriginalAmount, x.CreatedAt)).ToListAsync();
         return Build(supplier.Name, customer?.Name, opening, receipts.Concat(payments).Concat(credits));
     }
 
@@ -72,7 +72,7 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
         var deliveries = await deliveryQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
             .Select(x => new Movement(x.Date, "توريد - " + x.SupplierReceipt.PolicyNumber + " - " + x.SupplierReceipt.Material.Name + " - " + x.SupplierReceipt.Quantity + " × " + x.UnitPrice, x.Total, 0m, x.CreatedAt)).ToListAsync();
         var payments = await paymentQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
-            .Select(x => new Movement(x.Date, "قبض - " + x.CustomerDelivery.SupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name + (x.Comments == null ? "" : " - " + x.Comments), 0m, x.Amount, x.CreatedAt)).ToListAsync();
+            .Select(x => new Movement(x.Date, "قبض - " + x.CustomerDelivery.SupplierReceipt.PolicyNumber + " - " + x.PaymentMethod.Name + ((filter.ShowPrivateNotes ? x.Comments : x.PublicComments) == null ? "" : " - " + (filter.ShowPrivateNotes ? x.Comments : x.PublicComments)), 0m, x.Amount, x.CreatedAt)).ToListAsync();
         return Build(customer.Name, supplier?.Name, opening, deliveries.Concat(payments));
     }
 
@@ -103,7 +103,7 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
         var receipts = await receiptQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
             .Select(x => new Movement(x.Date, "استلام - " + x.PolicyNumber + " - " + x.Material.Name + " - " + x.Quantity + " × " + x.UnitPrice, x.Total, 0m, x.CreatedAt)).ToListAsync();
         var paymentData = await paymentQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
-            .Select(x => new { x.Id, x.PaymentGroupId, x.Date, x.Amount, x.CreditAmount, PaymentMethod = x.PaymentMethod.Name, x.Comments, x.CreatedAt }).ToListAsync();
+            .Select(x => new { x.Id, x.PaymentGroupId, x.Date, x.Amount, x.CreditAmount, PaymentMethod = x.PaymentMethod.Name, Comments = filter.ShowPrivateNotes ? x.Comments : x.PublicComments, x.CreatedAt }).ToListAsync();
         var generatedCredits = await creditQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
             .Select(x => new { x.SourcePaymentGroupId, x.OriginalAmount }).ToListAsync();
         var creditByGroup = generatedCredits.GroupBy(x => x.SourcePaymentGroupId).ToDictionary(x => x.Key, x => x.Sum(y => y.OriginalAmount));
@@ -146,7 +146,7 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
         var deliveries = await deliveryQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
             .Select(x => new Movement(x.Date, "توريد - " + x.SupplierReceipt.PolicyNumber + " - " + x.SupplierReceipt.Material.Name + " - " + x.SupplierReceipt.Quantity + " × " + x.UnitPrice, x.Total, 0m, x.CreatedAt)).ToListAsync();
         var paymentData = await paymentQuery.AsNoTracking().Where(x => x.Date >= from && x.Date <= to)
-            .Select(x => new { x.Id, x.PaymentGroupId, x.Date, x.Amount, PaymentMethod = x.PaymentMethod.Name, x.Comments, x.CreatedAt }).ToListAsync();
+            .Select(x => new { x.Id, x.PaymentGroupId, x.Date, x.Amount, PaymentMethod = x.PaymentMethod.Name, Comments = filter.ShowPrivateNotes ? x.Comments : x.PublicComments, x.CreatedAt }).ToListAsync();
         var payments = paymentData.GroupBy(x => x.PaymentGroupId.HasValue ? "G:" + x.PaymentGroupId.Value : "P:" + x.Id)
             .Select(group =>
             {

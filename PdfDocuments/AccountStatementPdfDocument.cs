@@ -16,6 +16,7 @@ public sealed class AccountStatementPdfDocument(string title, string partyLabel,
             page.Header().Column(c =>
             {
                 c.Item().AlignRight().Text(title).FontSize(18).Bold();
+                c.Item().AlignRight().Text($"نوع الملاحظات: {(filter.ShowPrivateNotes ? "ملاحظات خاصة" : "ملاحظات عامة")}");
                 c.Item().AlignRight().Text($"{partyLabel}: {report.PartyName} | {relatedPartyLabel}: {report.RelatedPartyName ?? "الكل"}").FontColor(Colors.Grey.Darken2);
                 c.Item().AlignRight().Text($"من: {filter.FromDate:yyyy/MM/dd} | إلى: {filter.ToDate:yyyy/MM/dd}").FontColor(Colors.Grey.Darken2);
             });

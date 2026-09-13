@@ -12,6 +12,7 @@
     @if (Model.Report is not null)
     {
         <a asp-page-handler="Pdf"
+           asp-route-Filter.ShowPrivateNotes="@Model.Filter.ShowPrivateNotes"
            asp-route-Filter.PartyId="@Model.Filter.PartyId"
            asp-route-Filter.RelatedPartyId="@Model.Filter.RelatedPartyId"
            asp-route-Filter.FromDate="@fromDate"
@@ -22,6 +23,13 @@
 
 <form method="get" class="card card-body mb-3">
     <div class="row g-3">
+        <div class="col-12">
+            <label asp-for="Filter.ShowPrivateNotes" class="form-label">نوع الملاحظات</label>
+            <select asp-for="Filter.ShowPrivateNotes" class="form-select">
+                <option value="false">ملاحظات عامة</option>
+                <option value="true">ملاحظات خاصة</option>
+            </select>
+        </div>
         <div class="col-md-3">
             <label class="form-label">المورد</label>
             <select asp-for="Filter.PartyId" asp-items="Model.Suppliers" class="form-select">
@@ -55,6 +63,7 @@
 {
     <div class="report-header card card-body mb-3">
         <h5>@Model.Report.PartyName</h5>
+        <div>نوع الملاحظات: @(Model.Filter.ShowPrivateNotes ? "ملاحظات خاصة" : "ملاحظات عامة")</div>
         <div>العميل: <strong>@(Model.Report.RelatedPartyName ?? "كل العملاء")</strong></div>
         <div>الفترة من @Model.Filter.FromDate?.ToString("yyyy/MM/dd") إلى @Model.Filter.ToDate?.ToString("yyyy/MM/dd")</div>
         <div>الرصيد قبل الفترة: <strong>@Model.Report.OpeningBalance.ToString("N2")</strong></div>

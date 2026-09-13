@@ -1,11 +1,11 @@
 namespace MYOB.DTOs;
 public sealed record SupplierReceiptCommand(Guid SupplierId,Guid MaterialId,DateOnly Date,string PolicyNumber,decimal Quantity,decimal UnitPrice,decimal TaxPercent,string? Details);
-public sealed record SupplierPaymentCommand(Guid SupplierId,Guid SupplierReceiptId,DateOnly Date,decimal Amount,Guid PaymentMethodId,string? Comments);
+public sealed record SupplierPaymentCommand(Guid SupplierId,Guid SupplierReceiptId,DateOnly Date,decimal Amount,Guid PaymentMethodId,string? Comments) { public string? PublicComments { get; init; } }
 public sealed record SupplierPaymentAllocation(Guid SupplierReceiptId,decimal Amount);
-public sealed record SupplierPaymentBatchCommand(Guid SupplierId,DateOnly Date,decimal TotalAmount,Guid PaymentMethodId,string? Comments,Guid? SupplierCreditId,IReadOnlyList<SupplierPaymentAllocation> Allocations);
+public sealed record SupplierPaymentBatchCommand(Guid SupplierId,DateOnly Date,decimal TotalAmount,Guid PaymentMethodId,string? Comments,Guid? SupplierCreditId,IReadOnlyList<SupplierPaymentAllocation> Allocations) { public string? PublicComments { get; init; } }
 public sealed record CustomerDeliveryCommand(Guid CustomerId,Guid SupplierReceiptId,DateOnly Date,decimal UnitPrice,decimal TaxPercent,string? Details);
-public sealed record CustomerPaymentCommand(Guid CustomerId,Guid CustomerDeliveryId,DateOnly Date,decimal Amount,Guid PaymentMethodId,string? Comments);
+public sealed record CustomerPaymentCommand(Guid CustomerId,Guid CustomerDeliveryId,DateOnly Date,decimal Amount,Guid PaymentMethodId,string? Comments) { public string? PublicComments { get; init; } }
 public sealed record CustomerPaymentAllocation(Guid CustomerDeliveryId,decimal Amount);
-public sealed record CustomerPaymentBatchCommand(Guid CustomerId,DateOnly Date,Guid PaymentMethodId,string? Comments,IReadOnlyList<CustomerPaymentAllocation> Allocations);
+public sealed record CustomerPaymentBatchCommand(Guid CustomerId,DateOnly Date,Guid PaymentMethodId,string? Comments,IReadOnlyList<CustomerPaymentAllocation> Allocations) { public string? PublicComments { get; init; } }
 public sealed record PolicyOption(Guid Id,string PolicyNumber,DateOnly PolicyDate,string MaterialName,string UnitName,decimal Quantity,decimal RemainingAmount,decimal PurchaseUnitPrice,decimal PurchaseTaxPercent,decimal PurchaseTotal);
 public sealed record SupplierCreditOption(Guid Id,decimal RemainingAmount,Guid PaymentMethodId,string PaymentMethodName,string SourcePolicyNumber,DateOnly SourceDate,string CarryForwardNote);

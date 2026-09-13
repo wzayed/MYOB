@@ -33,7 +33,7 @@ public class CreateModel(ApplicationDbContext db,ITransactionService transaction
         if(Item.TotalAmount>0&&allocated!=Item.TotalAmount)ModelState.AddModelError(string.Empty,$"يجب توزيع إجمالي المبلغ بالكامل. المتبقي للتوزيع: {Item.TotalAmount-allocated:N2}");
         if(ModelState.IsValid)try
         {
-            await transactions.CreateCustomerPaymentsAsync(new(Item.CustomerId,Item.Date,Item.PaymentMethodId,Item.Comments,Item.Allocations.Where(x=>x.Amount>0).Select(x=>new CustomerPaymentAllocation(x.CustomerDeliveryId,x.Amount)).ToList()));
+            await transactions.CreateCustomerPaymentsAsync(new(Item.CustomerId,Item.Date,Item.PaymentMethodId,Item.Comments,Item.Allocations.Where(x=>x.Amount>0).Select(x=>new CustomerPaymentAllocation(x.CustomerDeliveryId,x.Amount)).ToList()) { PublicComments = Item.PublicComments });
             TempData["Message"]="تم تسجيل القبض وتوزيعه على البوالص المحددة";return RedirectToPage("Index");
         }
         catch(InvalidOperationException e){ModelState.AddModelError(string.Empty,e.Message);}

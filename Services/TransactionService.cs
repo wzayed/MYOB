@@ -46,7 +46,7 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
     }
     public async Task CreateSupplierPaymentAsync(SupplierPaymentCommand c)
     {
-        await CreateSupplierPaymentsAsync(new(c.SupplierId,c.Date,c.Amount,c.PaymentMethodId,c.Comments,null,[new(c.SupplierReceiptId,c.Amount)]));
+        await CreateSupplierPaymentsAsync(new(c.SupplierId,c.Date,c.Amount,c.PaymentMethodId,c.Comments,null,[new(c.SupplierReceiptId,c.Amount)]) { PublicComments=c.PublicComments });
     }
     public async Task CreateSupplierPaymentsAsync(SupplierPaymentBatchCommand c)
     {
@@ -73,14 +73,14 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
             var receipt=receipts[allocation.SupplierReceiptId];var remaining=receipt.Total-receipt.Payments.Sum(x=>x.Amount);
             if(allocation.Amount>remaining)throw new InvalidOperationException($"المبلغ المخصص للبوليصة {receipt.PolicyNumber} أكبر من المتبقي ({remaining:N2}).");
             var creditAmount=Math.Min(unappliedCredit,allocation.Amount);unappliedCredit-=creditAmount;
-            db.SupplierPayments.Add(new SupplierPayment{PaymentGroupId=paymentGroupId,SupplierId=c.SupplierId,SupplierReceiptId=allocation.SupplierReceiptId,SupplierCreditId=creditAmount>0?credit!.Id:null,CreditAmount=creditAmount,Date=c.Date,Amount=allocation.Amount,PaymentMethodId=c.PaymentMethodId,Comments=comments});
+            db.SupplierPayments.Add(new SupplierPayment{PaymentGroupId=paymentGroupId,SupplierId=c.SupplierId,SupplierReceiptId=allocation.SupplierReceiptId,SupplierCreditId=creditAmount>0?credit!.Id:null,CreditAmount=creditAmount,Date=c.Date,Amount=allocation.Amount,PaymentMethodId=c.PaymentMethodId,Comments=comments,PublicComments=c.PublicComments});
         }
         if(credit is not null)credit.RemainingAmount-=creditToApply;
         var excess=c.TotalAmount-allocatedTotal;
         if(excess>0)
         {
             var sourceReceipt=receipts[allocations[^1].SupplierReceiptId];
-            db.SupplierCredits.Add(new SupplierCredit{SupplierId=c.SupplierId,SourceSupplierReceiptId=sourceReceipt.Id,SourcePaymentGroupId=paymentGroupId,Date=c.Date,PaymentMethodId=c.PaymentMethodId,OriginalAmount=excess,RemainingAmount=excess,Comments=comments});
+            db.SupplierCredits.Add(new SupplierCredit{SupplierId=c.SupplierId,SourceSupplierReceiptId=sourceReceipt.Id,SourcePaymentGroupId=paymentGroupId,Date=c.Date,PaymentMethodId=c.PaymentMethodId,OriginalAmount=excess,RemainingAmount=excess,Comments=comments,PublicComments=c.PublicComments});
         }
         await db.SaveChangesAsync();await transaction.CommitAsync();
     }
@@ -119,7 +119,7 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
     public async Task UpdateSupplierPaymentAsync(Guid id,SupplierPaymentCommand c)
     {
         EnsureNotFuture(c.Date);
-        if(c.Amount<=0)throw new InvalidOperationException("مبلغ الدفع يجب أن يكون أكبر من صفر.");if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");var payment=await db.SupplierPayments.SingleOrDefaultAsync(x=>x.Id==id)??throw new InvalidOperationException("حركة الدفع غير موجودة.");var receipt=await db.SupplierReceipts.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==c.SupplierReceiptId&&x.SupplierId==c.SupplierId)??throw new InvalidOperationException("البوليصة لا تخص المورد المحدد.");var remaining=receipt.Total-receipt.Payments.Where(x=>x.Id!=id).Sum(x=>x.Amount);if(c.Amount>remaining)throw new InvalidOperationException($"المبلغ أكبر من المتبقي ({remaining:N2}).");payment.SupplierId=c.SupplierId;payment.SupplierReceiptId=c.SupplierReceiptId;payment.Date=c.Date;payment.Amount=c.Amount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=c.Comments;await db.SaveChangesAsync();
+        if(c.Amount<=0)throw new InvalidOperationException("مبلغ الدفع يجب أن يكون أكبر من صفر.");if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");var payment=await db.SupplierPayments.SingleOrDefaultAsync(x=>x.Id==id)??throw new InvalidOperationException("حركة الدفع غير موجودة.");var receipt=await db.SupplierReceipts.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==c.SupplierReceiptId&&x.SupplierId==c.SupplierId)??throw new InvalidOperationException("البوليصة لا تخص المورد المحدد.");var remaining=receipt.Total-receipt.Payments.Where(x=>x.Id!=id).Sum(x=>x.Amount);if(c.Amount>remaining)throw new InvalidOperationException($"المبلغ أكبر من المتبقي ({remaining:N2}).");payment.SupplierId=c.SupplierId;payment.SupplierReceiptId=c.SupplierReceiptId;payment.Date=c.Date;payment.Amount=c.Amount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=c.Comments;payment.PublicComments=c.PublicComments;await db.SaveChangesAsync();
     }
     public async Task UpdateSupplierPaymentsAsync(Guid id,SupplierPaymentBatchCommand c)
     {
@@ -169,12 +169,12 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
             var alreadyUsed=generatedCredit.OriginalAmount-generatedCredit.RemainingAmount;
             if(excess<alreadyUsed)throw new InvalidOperationException($"لا يمكن خفض الرصيد الدائن عن المبلغ المستخدم منه ({alreadyUsed:N2}).");
             if(alreadyUsed>0&&generatedCredit.PaymentMethodId!=c.PaymentMethodId)throw new InvalidOperationException("لا يمكن تغيير طريقة سداد رصيد دائن استُخدم في بوالص لاحقة.");
-            generatedCredit.OriginalAmount=excess;generatedCredit.RemainingAmount=excess-alreadyUsed;generatedCredit.Date=c.Date;generatedCredit.PaymentMethodId=c.PaymentMethodId;generatedCredit.Comments=comments;generatedCredit.SourceSupplierReceiptId=allocations[^1].SupplierReceiptId;
+            generatedCredit.OriginalAmount=excess;generatedCredit.RemainingAmount=excess-alreadyUsed;generatedCredit.Date=c.Date;generatedCredit.PaymentMethodId=c.PaymentMethodId;generatedCredit.Comments=comments;generatedCredit.PublicComments=c.PublicComments;generatedCredit.SourceSupplierReceiptId=allocations[^1].SupplierReceiptId;
             if(excess==0){generatedCredit.IsDeleted=true;generatedCredit.DeletedAt=DateTimeOffset.UtcNow;}
         }
         else if(excess>0)
         {
-            db.SupplierCredits.Add(new SupplierCredit{SupplierId=c.SupplierId,SourceSupplierReceiptId=allocations[^1].SupplierReceiptId,SourcePaymentGroupId=paymentGroupId,Date=c.Date,PaymentMethodId=c.PaymentMethodId,OriginalAmount=excess,RemainingAmount=excess,Comments=comments});
+            db.SupplierCredits.Add(new SupplierCredit{SupplierId=c.SupplierId,SourceSupplierReceiptId=allocations[^1].SupplierReceiptId,SourcePaymentGroupId=paymentGroupId,Date=c.Date,PaymentMethodId=c.PaymentMethodId,OriginalAmount=excess,RemainingAmount=excess,Comments=comments,PublicComments=c.PublicComments});
         }
 
         var existing=group.GroupBy(x=>x.SupplierReceiptId).ToDictionary(x=>x.Key,x=>x.First());
@@ -187,7 +187,7 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
                 payment=new SupplierPayment{PaymentGroupId=paymentGroupId,SupplierId=c.SupplierId,SupplierReceiptId=allocation.SupplierReceiptId};db.SupplierPayments.Add(payment);
             }
             var creditAmount=Math.Min(unappliedCredit,allocation.Amount);unappliedCredit-=creditAmount;
-            payment.PaymentGroupId=paymentGroupId;payment.SupplierId=c.SupplierId;payment.Date=c.Date;payment.Amount=allocation.Amount;payment.SupplierCreditId=creditAmount>0?credit!.Id:null;payment.CreditAmount=creditAmount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=comments;
+            payment.PaymentGroupId=paymentGroupId;payment.SupplierId=c.SupplierId;payment.Date=c.Date;payment.Amount=allocation.Amount;payment.SupplierCreditId=creditAmount>0?credit!.Id:null;payment.CreditAmount=creditAmount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=comments;payment.PublicComments=c.PublicComments;
         }
         foreach(var payment in existing.Values.Concat(duplicates)){payment.IsDeleted=true;payment.DeletedAt=DateTimeOffset.UtcNow;}
         await db.SaveChangesAsync();
@@ -216,7 +216,7 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
     }
     public async Task CreateCustomerPaymentAsync(CustomerPaymentCommand c)
     {
-        await CreateCustomerPaymentsAsync(new(c.CustomerId,c.Date,c.PaymentMethodId,c.Comments,[new(c.CustomerDeliveryId,c.Amount)]));
+        await CreateCustomerPaymentsAsync(new(c.CustomerId,c.Date,c.PaymentMethodId,c.Comments,[new(c.CustomerDeliveryId,c.Amount)]) { PublicComments=c.PublicComments });
     }
     public async Task CreateCustomerPaymentsAsync(CustomerPaymentBatchCommand c)
     {
@@ -233,14 +233,14 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
         {
             var delivery=deliveries[allocation.CustomerDeliveryId];var remaining=delivery.Total-delivery.Payments.Sum(x=>x.Amount);
             if(allocation.Amount>remaining)throw new InvalidOperationException($"المبلغ المخصص للبوليصة {delivery.SupplierReceipt.PolicyNumber} أكبر من المتبقي ({remaining:N2}).");
-            db.CustomerPayments.Add(new CustomerPayment{PaymentGroupId=paymentGroupId,CustomerId=c.CustomerId,CustomerDeliveryId=allocation.CustomerDeliveryId,Date=c.Date,Amount=allocation.Amount,PaymentMethodId=c.PaymentMethodId,Comments=c.Comments});
+            db.CustomerPayments.Add(new CustomerPayment{PaymentGroupId=paymentGroupId,CustomerId=c.CustomerId,CustomerDeliveryId=allocation.CustomerDeliveryId,Date=c.Date,Amount=allocation.Amount,PaymentMethodId=c.PaymentMethodId,Comments=c.Comments,PublicComments=c.PublicComments});
         }
         await db.SaveChangesAsync();
     }
     public async Task UpdateCustomerPaymentAsync(Guid id,CustomerPaymentCommand c)
     {
         EnsureNotFuture(c.Date);
-        if(c.Amount<=0)throw new InvalidOperationException("مبلغ القبض يجب أن يكون أكبر من صفر.");if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");var payment=await db.CustomerPayments.SingleOrDefaultAsync(x=>x.Id==id)??throw new InvalidOperationException("حركة القبض غير موجودة.");var delivery=await db.CustomerDeliveries.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==c.CustomerDeliveryId&&x.CustomerId==c.CustomerId)??throw new InvalidOperationException("البوليصة لا تخص العميل المحدد.");var remaining=delivery.Total-delivery.Payments.Where(x=>x.Id!=id).Sum(x=>x.Amount);if(c.Amount>remaining)throw new InvalidOperationException($"المبلغ أكبر من المتبقي ({remaining:N2}).");payment.CustomerId=c.CustomerId;payment.CustomerDeliveryId=c.CustomerDeliveryId;payment.Date=c.Date;payment.Amount=c.Amount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=c.Comments;await db.SaveChangesAsync();
+        if(c.Amount<=0)throw new InvalidOperationException("مبلغ القبض يجب أن يكون أكبر من صفر.");if(!await db.PaymentMethods.AnyAsync(x=>x.Id==c.PaymentMethodId))throw new InvalidOperationException("طريقة الدفع غير صالحة.");var payment=await db.CustomerPayments.SingleOrDefaultAsync(x=>x.Id==id)??throw new InvalidOperationException("حركة القبض غير موجودة.");var delivery=await db.CustomerDeliveries.Include(x=>x.Payments).SingleOrDefaultAsync(x=>x.Id==c.CustomerDeliveryId&&x.CustomerId==c.CustomerId)??throw new InvalidOperationException("البوليصة لا تخص العميل المحدد.");var remaining=delivery.Total-delivery.Payments.Where(x=>x.Id!=id).Sum(x=>x.Amount);if(c.Amount>remaining)throw new InvalidOperationException($"المبلغ أكبر من المتبقي ({remaining:N2}).");payment.CustomerId=c.CustomerId;payment.CustomerDeliveryId=c.CustomerDeliveryId;payment.Date=c.Date;payment.Amount=c.Amount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=c.Comments;payment.PublicComments=c.PublicComments;await db.SaveChangesAsync();
     }
     public async Task UpdateCustomerPaymentsAsync(Guid id,CustomerPaymentBatchCommand c)
     {
@@ -273,7 +273,7 @@ public sealed class TransactionService(ApplicationDbContext db):ITransactionServ
                 payment=new CustomerPayment{PaymentGroupId=paymentGroupId,CustomerId=c.CustomerId,CustomerDeliveryId=allocation.CustomerDeliveryId};
                 db.CustomerPayments.Add(payment);
             }
-            payment.PaymentGroupId=paymentGroupId;payment.CustomerId=c.CustomerId;payment.Date=c.Date;payment.Amount=allocation.Amount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=c.Comments;
+            payment.PaymentGroupId=paymentGroupId;payment.CustomerId=c.CustomerId;payment.Date=c.Date;payment.Amount=allocation.Amount;payment.PaymentMethodId=c.PaymentMethodId;payment.Comments=c.Comments;payment.PublicComments=c.PublicComments;
         }
         foreach(var payment in existing.Values){payment.IsDeleted=true;payment.DeletedAt=DateTimeOffset.UtcNow;}
         await db.SaveChangesAsync();

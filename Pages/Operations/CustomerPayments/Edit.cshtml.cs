@@ -22,7 +22,7 @@ public class EditModel(ApplicationDbContext db, ITransactionService transactions
         var payments = await GetGroupAsync(id);
         if (payments.Count == 0) return NotFound();
         var anchor = payments[0];
-        Item = new CustomerPaymentBatchForm { PaymentGroupId = id, CustomerId = anchor.CustomerId, Date = anchor.Date, TotalAmount = payments.Sum(x => x.Amount), PaymentMethodId = anchor.PaymentMethodId, Comments = anchor.Comments };
+        Item = new CustomerPaymentBatchForm { PaymentGroupId = id, CustomerId = anchor.CustomerId, Date = anchor.Date, TotalAmount = payments.Sum(x => x.Amount), PaymentMethodId = anchor.PaymentMethodId, PublicComments = anchor.PublicComments, Comments = anchor.Comments };
         CustomerName = anchor.Customer.Name;
         await LoadAsync(payments);
         return Page();
@@ -35,7 +35,7 @@ public class EditModel(ApplicationDbContext db, ITransactionService transactions
         {
             try
             {
-                await transactions.UpdateCustomerPaymentsAsync(id, new(Item.CustomerId, Item.Date, Item.PaymentMethodId, Item.Comments, Item.Allocations.Where(x => x.Amount > 0).Select(x => new CustomerPaymentAllocation(x.CustomerDeliveryId, x.Amount)).ToList()));
+                await transactions.UpdateCustomerPaymentsAsync(id, new(Item.CustomerId, Item.Date, Item.PaymentMethodId, Item.Comments, Item.Allocations.Where(x => x.Amount > 0).Select(x => new CustomerPaymentAllocation(x.CustomerDeliveryId, x.Amount)).ToList()) { PublicComments = Item.PublicComments });
                 TempData["Message"] = "تم تعديل حركة القبض وجميع توزيعاتها";
                 return RedirectToPage("Index");
             }

@@ -51,3 +51,20 @@ html {
 body {
   margin-bottom: 60px;
 }
+/* Keep validation errors distinct from normal theme focus states. */
+.form-control.input-validation-error, .form-select.input-validation-error,
+.form-control.is-invalid, .form-select.is-invalid,
+.form-control[aria-invalid="true"], .form-select[aria-invalid="true"],
+.was-validated .form-control:invalid, .was-validated .form-select:invalid {
+  border-color: #dc3545 !important;
+}
+.form-control.input-validation-error:focus, .form-select.input-validation-error:focus,
+.form-control.is-invalid:focus, .form-select.is-invalid:focus,
+.form-control[aria-invalid="true"]:focus, .form-select[aria-invalid="true"]:focus,
+.was-validated .form-control:invalid:focus, .was-validated .form-select:invalid:focus,
+.form-control:user-invalid:focus, .form-select:user-invalid:focus {
+  border-color: #dc3545 !important;
+  outline-color: #dc3545 !important;
+  box-shadow: 0 0 0 .2rem rgba(220,53,69,.25) !important;
+}
+.form-control:user-invalid, .form-select:user-invalid { border-color: #dc3545 !important; }

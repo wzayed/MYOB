@@ -25,7 +25,7 @@ public class EditModel(ApplicationDbContext db, ITransactionService transactions
         var anchor = payments[0];
         var groupId=anchor.PaymentGroupId;
         var generatedCredit=groupId.HasValue?await db.SupplierCredits.AsNoTracking().SingleOrDefaultAsync(x=>x.SourcePaymentGroupId==groupId):null;
-        Item = new SupplierPaymentBatchForm { PaymentGroupId = id, SupplierCreditId=payments.FirstOrDefault(x=>x.SupplierCreditId.HasValue)?.SupplierCreditId, SupplierId = anchor.SupplierId, Date = anchor.Date, TotalAmount = payments.Sum(x => x.Amount)+(generatedCredit?.OriginalAmount??0m), PaymentMethodId = anchor.PaymentMethodId, Comments = anchor.Comments };
+        Item = new SupplierPaymentBatchForm { PaymentGroupId = id, SupplierCreditId=payments.FirstOrDefault(x=>x.SupplierCreditId.HasValue)?.SupplierCreditId, SupplierId = anchor.SupplierId, Date = anchor.Date, TotalAmount = payments.Sum(x => x.Amount)+(generatedCredit?.OriginalAmount??0m), PaymentMethodId = anchor.PaymentMethodId, PublicComments = anchor.PublicComments, Comments = anchor.Comments };
         SupplierName = anchor.Supplier.Name;
         await LoadAsync(payments);
         return Page();
@@ -38,7 +38,7 @@ public class EditModel(ApplicationDbContext db, ITransactionService transactions
         {
             try
             {
-                await transactions.UpdateSupplierPaymentsAsync(id, new(Item.SupplierId, Item.Date, Item.TotalAmount, Item.PaymentMethodId, Item.Comments, Item.SupplierCreditId, Item.Allocations.Where(x => x.Amount > 0).Select(x => new SupplierPaymentAllocation(x.SupplierReceiptId, x.Amount)).ToList()));
+                await transactions.UpdateSupplierPaymentsAsync(id, new(Item.SupplierId, Item.Date, Item.TotalAmount, Item.PaymentMethodId, Item.Comments, Item.SupplierCreditId, Item.Allocations.Where(x => x.Amount > 0).Select(x => new SupplierPaymentAllocation(x.SupplierReceiptId, x.Amount)).ToList()) { PublicComments = Item.PublicComments });
                 TempData["Message"] = "تم تعديل حركة الدفع وجميع توزيعاتها";
                 return RedirectToPage("Index");
             }

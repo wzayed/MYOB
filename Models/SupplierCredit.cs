@@ -15,4 +15,5 @@ public class SupplierCredit : AuditableEntity
     public decimal OriginalAmount { get; set; }
     public decimal RemainingAmount { get; set; }
     [MaxLength(2000)] public string? Comments { get; set; }
+    [MaxLength(2000)] public string? PublicComments { get; set; }
 }

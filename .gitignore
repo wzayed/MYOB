@@ -6,3 +6,6 @@ DataProtectionKeys/
 DatabaseBackups/
 *.user
 *.suo
+*.bak
+*.pdf
+*.DatabaseBackups
