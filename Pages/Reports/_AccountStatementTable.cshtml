@@ -20,7 +20,17 @@
             {
                 <tr>
                     <td>@row.Date.ToString("yyyy/MM/dd")</td>
-                    <td>@row.Details</td>
+                    <td>
+                        <span>@row.Details</span>
+                        @if (Model.ShowPrivateNotes && !string.IsNullOrWhiteSpace(row.PrivateNotes))
+                        {
+                            <span> - </span><span class="private-note">@row.PrivateNotes</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(row.PublicNotes))
+                        {
+                            <span> - </span><span>@row.PublicNotes</span>
+                        }
+                    </td>
                     <td>@(row.Debit == 0 ? "" : row.Debit.ToString("N2"))</td>
                     <td>@(row.Credit == 0 ? "" : row.Credit.ToString("N2"))</td>
                     <td>@row.Balance.ToString("N2")</td>

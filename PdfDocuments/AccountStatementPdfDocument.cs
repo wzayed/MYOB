@@ -30,7 +30,7 @@ public sealed class AccountStatementPdfDocument(string title, string partyLabel,
                     if (report.Rows.Count == 0) table.Cell().ColumnSpan(5).Padding(15).AlignCenter().Text("لا توجد حركات في الفترة المحددة");
                     foreach (var row in report.Rows)
                     {
-                        Cell(table.Cell(), row.Date.ToString("yyyy/MM/dd")); Cell(table.Cell(), row.Details);
+                        Cell(table.Cell(), row.Date.ToString("yyyy/MM/dd")); DetailsCell(table.Cell(), row, filter.ShowPrivateNotes);
                         Cell(table.Cell(), row.Debit == 0 ? "" : row.Debit.ToString("N2")); Cell(table.Cell(), row.Credit == 0 ? "" : row.Credit.ToString("N2")); Cell(table.Cell(), row.Balance.ToString("N2"));
                     }
                 });
@@ -42,4 +42,21 @@ public sealed class AccountStatementPdfDocument(string title, string partyLabel,
     }
     private static void Header(IContainer c, string text) => c.Background(Colors.Blue.Darken2).Padding(5).AlignRight().Text(text).FontColor(Colors.White).Bold();
     private static void Cell(IContainer c, string text) => c.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text(text);
+    private static void DetailsCell(IContainer c, AccountStatementRow row, bool showPrivateNotes)
+    {
+        c.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text(text =>
+        {
+            text.Span(row.Details);
+            if (showPrivateNotes && !string.IsNullOrWhiteSpace(row.PrivateNotes))
+            {
+                text.Span(" - ");
+                text.Span(row.PrivateNotes).FontColor(Colors.Blue.Medium);
+            }
+            if (!string.IsNullOrWhiteSpace(row.PublicNotes))
+            {
+                text.Span(" - ");
+                text.Span(row.PublicNotes);
+            }
+        });
+    }
 }

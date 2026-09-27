@@ -29,16 +29,16 @@
             <input id="distributionRemaining" class="form-control" readonly />
         </div>
         <div class="col-12">
-            <label for="Item_Comments" class="form-label">ملاحظات خاصة</label>
-            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-copy-payment-notes
-                    title="نسخ الملاحظات الخاصة إلى العامة" aria-label="نسخ الملاحظات الخاصة إلى العامة">↓</button>
-            <input asp-for="Item.Comments" class="form-control" />
-            <span asp-validation-for="Item.Comments" class="text-danger"></span>
-        </div>
-        <div class="col-12">
             <label asp-for="Item.PublicComments" class="form-label">ملاحظات عامة</label>
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-copy-payment-notes
+                    title="نسخ الملاحظات العامة إلى الخاصة" aria-label="نسخ الملاحظات العامة إلى الخاصة">↓</button>
             <input asp-for="Item.PublicComments" class="form-control" />
             <span asp-validation-for="Item.PublicComments" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label for="Item_Comments" class="form-label">ملاحظات خاصة</label>
+            <input asp-for="Item.Comments" class="form-control" />
+            <span asp-validation-for="Item.Comments" class="text-danger"></span>
         </div>
     </div>
     <h5>توزيع المبلغ على البوالص</h5>

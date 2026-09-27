@@ -20,6 +20,7 @@ public class IndexModel(ApplicationDbContext db, IPermissionService permissions,
     public bool CanPay { get; private set; }
     public bool CanCollect { get; private set; }
     public bool CanDeliver { get; private set; }
+    public bool CanReceive { get; private set; }
     public List<PartyBalance> Suppliers { get; private set; } = [];
     public List<PartyBalance> Customers { get; private set; } = [];
     public List<PartyBalance> Credits { get; private set; } = [];
@@ -49,6 +50,7 @@ public class IndexModel(ApplicationDbContext db, IPermissionService permissions,
             CanPay = await permissions.HasAsync(User, ScreenCatalog.SupplierPayments) && await permissions.HasAsync(User, ScreenCatalog.SupplierPayments, PermissionAction.Add);
             CanCollect = await permissions.HasAsync(User, ScreenCatalog.CustomerPayments) && await permissions.HasAsync(User, ScreenCatalog.CustomerPayments, PermissionAction.Add);
             CanDeliver = await permissions.HasAsync(User, ScreenCatalog.CustomerDeliveries) && await permissions.HasAsync(User, ScreenCatalog.CustomerDeliveries, PermissionAction.Add);
+            CanReceive = await permissions.HasAsync(User, ScreenCatalog.SupplierReceipts) && await permissions.HasAsync(User, ScreenCatalog.SupplierReceipts, PermissionAction.Add);
             var today = Today;
             var month = new DateOnly(today.Year, today.Month, 1);
             if (SuppliersVisible)

@@ -232,6 +232,7 @@ else
             <nav class="d-flex flex-wrap gap-2 mt-4" aria-label="عمليات سريعة">
                 @if (Model.CanPay) { <a class="btn btn-primary" asp-page="/Operations/SupplierPayments/Create">تسجيل دفع إلى مورد</a> }
                 @if (Model.CanCollect) { <a class="btn btn-primary" asp-page="/Operations/CustomerPayments/Create">تسجيل قبض من عميل</a> }
+                @if (Model.CanReceive) { <a class="btn btn-primary" asp-page="/Operations/SupplierReceipts/Create">إستلام بضاعة من مورد</a> }
                 @if (Model.CanDeliver) { <a class="btn btn-primary" asp-page="/Operations/CustomerDeliveries/Create">توريد بضاعة لعميل</a> }
             </nav>
         }

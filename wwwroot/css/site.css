@@ -68,3 +68,5 @@ body {
   box-shadow: 0 0 0 .2rem rgba(220,53,69,.25) !important;
 }
 .form-control:user-invalid, .form-select:user-invalid { border-color: #dc3545 !important; }
+.private-note { color:#0d6efd; }
+[data-theme="dark"] .private-note { color:#6ea8fe; }

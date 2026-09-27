@@ -12,8 +12,8 @@ public sealed class AccountStatementFilter
     public bool ShowPrivateNotes { get; set; }
 }
 
-public sealed record AccountStatementRow(DateOnly Date, string Details, decimal Debit, decimal Credit, decimal Balance);
-public sealed record AccountStatementResult(string PartyName, string? RelatedPartyName, decimal OpeningBalance, IReadOnlyList<AccountStatementRow> Rows, decimal TotalDebit, decimal TotalCredit, decimal ClosingBalance);
+public sealed record AccountStatementRow(DateOnly Date, string Details, decimal Debit, decimal Credit, decimal Balance, string? PrivateNotes = null, string? PublicNotes = null);
+public sealed record AccountStatementResult(string PartyName, string? RelatedPartyName, decimal OpeningBalance, IReadOnlyList<AccountStatementRow> Rows, decimal TotalDebit, decimal TotalCredit, decimal ClosingBalance, bool ShowPrivateNotes = false);
 
 public sealed class ProfitLossFilter
 {
