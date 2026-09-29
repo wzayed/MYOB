@@ -11,9 +11,11 @@ using QuestPDF.Fluent;
 
 namespace MYOB.Pages.Reports;
 
-public class ProfitLossModel(IFinancialReportService reports, ApplicationDbContext db) : PageModel
+public class ProfitLossRealizedModel(IFinancialReportService reports, ApplicationDbContext db) : PageModel
 {
-    [BindProperty(SupportsGet = true)] public ProfitLossFilter Filter { get; set; } = new();
+    [BindProperty(SupportsGet = true)]
+    public ProfitLossFilter Filter { get; set; } = new();
+
     public ProfitLossResult Report { get; private set; } = new([], [], []);
     public SelectList Suppliers { get; private set; } = null!;
     public SelectList Customers { get; private set; } = null!;
@@ -23,23 +25,35 @@ public class ProfitLossModel(IFinancialReportService reports, ApplicationDbConte
     public async Task OnGetAsync()
     {
         await LoadFiltersAsync();
-        if (ValidRange()) Report = await reports.GetProfitLossAsync(Filter);
+        if (ValidRange())
+            Report = await reports.GetProfitLossAsync(Filter);
     }
 
     public async Task<IActionResult> OnGetPdfAsync()
     {
-        if (!ValidRange()) return BadRequest("حدد الفترة بصورة صحيحة.");
+        if (!ValidRange())
+            return BadRequest("حدد الفترة بصورة صحيحة.");
+
         await LoadFiltersAsync();
         var report = await reports.GetProfitLossAsync(Filter);
-        return File(new ProfitLossPdfDocument(report, Filter, SupplierName, CustomerName).GeneratePdf(), "application/pdf", $"total-profit-loss-{DateTime.Now:yyyyMMddHHmm}.pdf");
+        var document = new ProfitLossPdfDocument(report, Filter, SupplierName, CustomerName, realizedOnly: true);
+        return File(document.GeneratePdf(), "application/pdf", $"realized-profit-loss-{DateTime.Now:yyyyMMddHHmm}.pdf");
     }
 
-    private bool ValidRange() => ModelState.IsValid && Filter.FromDate.HasValue && Filter.ToDate.HasValue && Filter.FromDate <= Filter.ToDate && Filter.ToDate <= BusinessDate.Today;
+    private bool ValidRange() =>
+        ModelState.IsValid
+        && Filter.FromDate.HasValue
+        && Filter.ToDate.HasValue
+        && Filter.FromDate <= Filter.ToDate
+        && Filter.ToDate <= BusinessDate.Today;
+
     private async Task LoadFiltersAsync()
     {
         var suppliers = await db.Suppliers.AsNoTracking().OrderBy(x => x.Name).ToListAsync();
         var customers = await db.Customers.AsNoTracking().OrderBy(x => x.Name).ToListAsync();
-        Suppliers = new(suppliers, "Id", "Name"); Customers = new(customers, "Id", "Name");
+
+        Suppliers = new SelectList(suppliers, "Id", "Name");
+        Customers = new SelectList(customers, "Id", "Name");
         SupplierName = suppliers.FirstOrDefault(x => x.Id == Filter.SupplierId)?.Name ?? "الكل";
         CustomerName = customers.FirstOrDefault(x => x.Id == Filter.CustomerId)?.Name ?? "الكل";
     }

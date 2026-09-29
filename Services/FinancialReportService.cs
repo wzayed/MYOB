@@ -167,7 +167,7 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
         if (filter.CustomerId.HasValue) query = query.Where(x => x.CustomerId == filter.CustomerId.Value);
         var policies = await query.OrderBy(x => x.Date).Select(x => new
         {
-            SupplierName=x.SupplierReceipt.Supplier.Name,CustomerName=x.Customer.Name,x.SupplierReceipt.PolicyNumber,
+            PolicyDate=x.SupplierReceipt.Date,SupplierName=x.SupplierReceipt.Supplier.Name,CustomerName=x.Customer.Name,x.SupplierReceipt.PolicyNumber,
             GrossProfit=x.SupplierReceipt.Quantity*(x.UnitPrice-x.SupplierReceipt.UnitPrice),SaleTotal=x.Total,
             CollectedInPeriod=x.Payments.Where(p=>p.Date>=from&&p.Date<=to).Sum(p=>(decimal?)p.Amount)??0m,
             CollectedToDate=x.Payments.Where(p=>p.Date<=to).Sum(p=>(decimal?)p.Amount)??0m
@@ -179,15 +179,15 @@ public sealed class FinancialReportService(ApplicationDbContext db) : IFinancial
             var remainingRatio=policy.SaleTotal<=0?0m:Math.Clamp((policy.SaleTotal-policy.CollectedToDate)/policy.SaleTotal,0m,1m);
             var realizedValue=decimal.Round(policy.GrossProfit*periodRatio,2,MidpointRounding.AwayFromZero);
             var unrealizedValue=decimal.Round(policy.GrossProfit*remainingRatio,2,MidpointRounding.AwayFromZero);
-            if(policy.CollectedInPeriod>0)realized.Add(new(policy.SupplierName,policy.CustomerName,policy.PolicyNumber,realizedValue,true));
-            if(policy.CollectedToDate<policy.SaleTotal)unrealized.Add(new(policy.SupplierName,policy.CustomerName,policy.PolicyNumber,unrealizedValue,false));
+            if(policy.CollectedInPeriod>0)realized.Add(new(policy.PolicyDate,policy.SupplierName,policy.CustomerName,policy.PolicyNumber,realizedValue,true));
+            if(policy.CollectedToDate<policy.SaleTotal)unrealized.Add(new(policy.PolicyDate,policy.SupplierName,policy.CustomerName,policy.PolicyNumber,unrealizedValue,false));
         }
         var undelivered=new List<UndeliveredGoodsRow>();
         if(!filter.CustomerId.HasValue)
         {
             var inventoryQuery=db.SupplierReceipts.AsNoTracking().Where(x=>x.Date>=from&&x.Date<=to&&x.CustomerDelivery==null);
             if(filter.SupplierId.HasValue)inventoryQuery=inventoryQuery.Where(x=>x.SupplierId==filter.SupplierId.Value);
-            undelivered=await inventoryQuery.OrderBy(x=>x.Date).Select(x=>new UndeliveredGoodsRow(x.Supplier.Name,x.PolicyNumber,x.Material.Name,x.Quantity,x.Total)).ToListAsync();
+            undelivered=await inventoryQuery.OrderBy(x=>x.Date).Select(x=>new UndeliveredGoodsRow(x.Date,x.Supplier.Name,x.PolicyNumber,x.Material.Name,x.Quantity,x.Total)).ToListAsync();
         }
         return new(realized,unrealized,undelivered);
     }

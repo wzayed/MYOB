@@ -1,0 +1,72 @@
+@page
+@model MYOB.Pages.Reports.ProfitLossRealizedModel
+
+@{
+    ViewData["Title"] = "الأرباح والخسائر المحققة";
+    var realizedTotal = Model.Report.Realized.Sum(x => x.Value);
+    var fromDate = Model.Filter.FromDate?.ToString("yyyy/MM/dd");
+    var toDate = Model.Filter.ToDate?.ToString("yyyy/MM/dd");
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>الأرباح والخسائر المحققة</h1>
+    <a asp-page-handler="Pdf"
+       asp-route-Filter.SupplierId="@Model.Filter.SupplierId"
+       asp-route-Filter.CustomerId="@Model.Filter.CustomerId"
+       asp-route-Filter.FromDate="@fromDate"
+       asp-route-Filter.ToDate="@toDate"
+       class="btn btn-danger">
+        تصدير PDF
+    </a>
+</div>
+
+<form method="get" class="card card-body mb-3">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">من تاريخ</label>
+            <input asp-for="Filter.FromDate" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+            <span asp-validation-for="Filter.FromDate" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">إلى تاريخ</label>
+            <input asp-for="Filter.ToDate" asp-format="{0:yyyy-MM-dd}" type="date" class="form-control" />
+            <span asp-validation-for="Filter.ToDate" class="text-danger"></span>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">المورد</label>
+            <select asp-for="Filter.SupplierId" asp-items="Model.Suppliers" class="form-select">
+                <option value="">كل الموردين</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">العميل</label>
+            <select asp-for="Filter.CustomerId" asp-items="Model.Customers" class="form-select">
+                <option value="">كل العملاء</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100">عرض</button>
+        </div>
+    </div>
+</form>
+
+<div class="report-header card card-body mb-3">
+    <div>
+        الفترة من @Model.Filter.FromDate?.ToString("yyyy/MM/dd")
+        إلى @Model.Filter.ToDate?.ToString("yyyy/MM/dd")
+    </div>
+    <div>
+        المورد: <strong>@Model.SupplierName</strong> |
+        العميل: <strong>@Model.CustomerName</strong>
+    </div>
+    <small class="text-muted">
+        الربح أو الخسارة المحققة تُحسب بنسبة المبالغ التي تم تحصيلها فعلياً من العميل
+        خلال الفترة المحددة.
+    </small>
+</div>
+
+<partial name="_ProfitLossTable" model="Model.Report.Realized" />
+
+<div class="alert alert-success text-end fw-bold fs-5 mt-3">
+    صافي الربح/الخسارة المحقق: @realizedTotal.ToString("N2")
+</div>

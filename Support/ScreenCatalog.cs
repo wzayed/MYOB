@@ -31,7 +31,7 @@ public static class ScreenCatalog
         new(AuditTrail, "سجل المراجعة", "التقارير", "/Reports/AuditTrail"),
         new(SupplierStatement, "كشف حساب مورد", "التقارير", "/Reports/SupplierStatement"),
         new(CustomerStatement, "كشف حساب عميل", "التقارير", "/Reports/CustomerStatement"),
-        new(ProfitLoss, "الأرباح والخسائر", "التقارير", "/Reports/ProfitLoss")
+        new(ProfitLoss, "الأرباح و الخسائر", "التقارير", "/Reports/ProfitLoss")
     ];
     public static ScreenDefinition? FromPath(string path) => All.OrderByDescending(x => x.Path.Length)
         .FirstOrDefault(x => path.StartsWith(x.Path, StringComparison.OrdinalIgnoreCase));

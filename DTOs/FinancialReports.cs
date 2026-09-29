@@ -23,6 +23,6 @@ public sealed class ProfitLossFilter
     public Guid? CustomerId { get; set; }
 }
 
-public sealed record ProfitLossRow(string SupplierName, string CustomerName, string PolicyNumber, decimal Value, bool IsRealized);
-public sealed record UndeliveredGoodsRow(string SupplierName, string PolicyNumber, string MaterialName, decimal Quantity, decimal PurchaseCost);
+public sealed record ProfitLossRow(DateOnly PolicyDate, string SupplierName, string CustomerName, string PolicyNumber, decimal Value, bool IsRealized);
+public sealed record UndeliveredGoodsRow(DateOnly PolicyDate, string SupplierName, string PolicyNumber, string MaterialName, decimal Quantity, decimal PurchaseCost);
 public sealed record ProfitLossResult(IReadOnlyList<ProfitLossRow> Realized, IReadOnlyList<ProfitLossRow> Unrealized, IReadOnlyList<UndeliveredGoodsRow> UndeliveredGoods);

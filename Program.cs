@@ -33,6 +33,19 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     })
     .AddRoles<Microsoft.AspNetCore.Identity.IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+    options.SlidingExpiration = true;
+    // Renew on every authenticated request so the full hour starts at the last use.
+    options.Events.OnCheckSlidingExpiration = context =>
+    {
+        context.ShouldRenew = true;
+        return Task.CompletedTask;
+    };
+    // Require a fresh login instead of accepting existing cookies with the old lifetime.
+    options.Cookie.Name = ".MYOB.Identity.OneHour";
+});
 builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
